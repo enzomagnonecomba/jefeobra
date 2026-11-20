@@ -13,7 +13,9 @@ import { Logo } from './Logo';
 import { Button, Card, Field } from './ui';
 import { useToast } from './Toast';
 import { ThemeToggle } from './ThemeToggle';
+import { LangSwitcher } from './LangSwitcher';
 import { diasDePrueba } from '../lib/planes';
+import { t } from '../i18n';
 
 interface NavItem { to: string; label: string; icon: LucideIcon }
 export const NAV: { title: string; items: NavItem[] }[] = [
@@ -50,18 +52,18 @@ function Sidebar({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: (
       {NAV.map((sec) => (
         <div key={sec.title}>
           {collapsed ? <div className="mx-auto mb-2 h-px w-6 bg-line" /> : (
-            <p className="mb-1.5 px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">{sec.title}</p>
+            <p className="mb-1.5 px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">{t(sec.title)}</p>
           )}
           <div className="space-y-0.5">
             {sec.items.map(({ to, label, icon: Icon }) => (
-              <NavLink key={to} to={to} onClick={onNavigate} title={collapsed ? label : undefined}
+              <NavLink key={to} to={to} onClick={onNavigate} title={collapsed ? t(label) : undefined}
                 className={({ isActive }) => `relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
                   collapsed ? 'justify-center' : ''} ${isActive ? 'text-ink' : 'text-slate-500 hover:bg-slate-100/70 hover:text-ink'}`}>
                 {({ isActive }) => (
                   <>
                     {isActive && <motion.span layoutId="nav-active" className="absolute inset-0 rounded-xl bg-white shadow-soft ring-1 ring-line" transition={{ type: 'spring', damping: 30, stiffness: 380 }} />}
                     <Icon size={18} className="relative shrink-0" strokeWidth={isActive ? 2.3 : 1.9} />
-                    {!collapsed && <span className="relative truncate">{label}</span>}
+                    {!collapsed && <span className="relative truncate">{t(label)}</span>}
                   </>
                 )}
               </NavLink>
@@ -78,7 +80,7 @@ function ObraSelector() {
   return (
     <div className="relative">
       <Building2 size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sage" />
-      <select aria-label="Obra activa" value={obraActiva?.id ?? ''} onChange={(e) => seleccionar(e.target.value)}
+      <select aria-label={t("Obra activa")} value={obraActiva?.id ?? ''} onChange={(e) => seleccionar(e.target.value)}
         className="max-w-[220px] cursor-pointer appearance-none truncate rounded-xl border border-line bg-white py-2 pl-9 pr-8 text-sm font-semibold shadow-soft outline-none focus:ring-4 focus:ring-sage-bg sm:max-w-xs">
         {obras.map((o) => <option key={o.id} value={o.id}>{o.nombre}</option>)}
       </select>
@@ -103,12 +105,12 @@ function PrimeraObra() {
   return (
     <Card className="mx-auto mt-10 max-w-md p-8" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
       <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-sage-bg text-sage"><Building2 size={22} /></div>
-      <h2 className="text-xl font-bold">Creá tu primera obra</h2>
-      <p className="mb-6 text-sm text-muted">Todo lo que cargues (tareas, pedidos, caja chica…) queda organizado por obra.</p>
+      <h2 className="text-xl font-bold">{t("Creá tu primera obra")}</h2>
+      <p className="mb-6 text-sm text-muted">{t("Todo lo que cargues (tareas, pedidos, caja chica…) queda organizado por obra.")}</p>
       <form onSubmit={submit} className="space-y-4">
-        <Field label="Nombre de la obra *"><input className="field" required autoFocus value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej. Edificio Belgrano" /></Field>
-        <Field label="Dirección"><input className="field" value={direccion} onChange={(e) => setDireccion(e.target.value)} /></Field>
-        <Button type="submit" className="w-full">Crear obra</Button>
+        <Field label={t("Nombre de la obra *")}><input className="field" required autoFocus value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder={t("Ej. Edificio Belgrano")} /></Field>
+        <Field label={t("Dirección")}><input className="field" value={direccion} onChange={(e) => setDireccion(e.target.value)} /></Field>
+        <Button type="submit" className="w-full">{t("Crear obra")}</Button>
       </form>
     </Card>
   );
@@ -139,14 +141,14 @@ export default function Layout() {
         </div>
         <Sidebar collapsed={collapsed} />
         <div className="border-t border-line p-3">
-          <NavLink to="/app/planes" title="Planes" className={({ isActive }) => `mb-1 flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium ${collapsed ? 'justify-center' : ''} ${isActive ? 'bg-white text-ink shadow-soft' : 'text-slate-500 hover:bg-slate-100/70'}`}>
-            <Gem size={18} />{!collapsed && 'Planes'}
+          <NavLink to="/app/planes" title={t("Planes")} className={({ isActive }) => `mb-1 flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium ${collapsed ? 'justify-center' : ''} ${isActive ? 'bg-white text-ink shadow-soft' : 'text-slate-500 hover:bg-slate-100/70'}`}>
+            <Gem size={18} />{!collapsed && t('Planes')}
           </NavLink>
-          <NavLink to="/app/obras" title="Mis obras" className={({ isActive }) => `mb-1 flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium ${collapsed ? 'justify-center' : ''} ${isActive ? 'bg-white text-ink shadow-soft' : 'text-slate-500 hover:bg-slate-100/70'}`}>
-            <Building2 size={18} />{!collapsed && 'Mis obras'}
+          <NavLink to="/app/obras" title={t("Mis obras")} className={({ isActive }) => `mb-1 flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium ${collapsed ? 'justify-center' : ''} ${isActive ? 'bg-white text-ink shadow-soft' : 'text-slate-500 hover:bg-slate-100/70'}`}>
+            <Building2 size={18} />{!collapsed && t('Mis obras')}
           </NavLink>
           <button onClick={() => setCollapsed(!collapsed)} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100/70 ${collapsed ? 'justify-center' : ''}`}>
-            {collapsed ? <PanelLeftOpen size={18} /> : <><PanelLeftClose size={18} /> Contraer menú</>}
+            {collapsed ? <PanelLeftOpen size={18} /> : <><PanelLeftClose size={18} /> {t("Contraer menú")}</>}
           </button>
         </div>
       </motion.aside>
@@ -160,12 +162,12 @@ export default function Layout() {
               initial={{ x: -300 }} animate={{ x: 0 }} exit={{ x: -300 }} transition={{ type: 'spring', damping: 30, stiffness: 300 }}>
               <div className="flex h-16 items-center justify-between px-5">
                 <Logo />
-                <button aria-label="Cerrar menú" onClick={() => setMobileOpen(false)} className="rounded-lg p-1.5 hover:bg-slate-100"><X size={20} /></button>
+                <button aria-label={t("Cerrar menú")} onClick={() => setMobileOpen(false)} className="rounded-lg p-1.5 hover:bg-slate-100"><X size={20} /></button>
               </div>
               <Sidebar collapsed={false} onNavigate={() => setMobileOpen(false)} />
               <div className="border-t border-line p-3">
-                <NavLink to="/app/planes" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600"><Gem size={18} /> Planes</NavLink>
-                <NavLink to="/app/obras" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600"><Building2 size={18} /> Mis obras</NavLink>
+                <NavLink to="/app/planes" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600"><Gem size={18} /> {t("Planes")}</NavLink>
+                <NavLink to="/app/obras" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600"><Building2 size={18} /> {t("Mis obras")}</NavLink>
               </div>
             </motion.aside>
           </>
@@ -174,17 +176,18 @@ export default function Layout() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-line bg-bone/85 px-4 backdrop-blur-md sm:px-6">
-          <button aria-label="Abrir menú" onClick={() => setMobileOpen(true)} className="rounded-lg p-1.5 hover:bg-slate-100 lg:hidden"><Menu size={20} /></button>
+          <button aria-label={t("Abrir menú")} onClick={() => setMobileOpen(true)} className="rounded-lg p-1.5 hover:bg-slate-100 lg:hidden"><Menu size={20} /></button>
           {obras.length > 0 && <ObraSelector />}
           <div className="flex-1" />
-          {!hasSupabase && <span className="hidden rounded-full bg-peach-bg px-3 py-1 text-xs font-semibold text-peach sm:inline">Modo demo · datos locales</span>}
+          {!hasSupabase && <span className="hidden rounded-full bg-peach-bg px-3 py-1 text-xs font-semibold text-peach sm:inline">{t("Modo demo · datos locales")}</span>}
           <Link to="/app/planes" className="hidden items-center gap-1.5 rounded-full bg-lilac-bg px-3 py-1 text-xs font-semibold text-lilac transition hover:brightness-95 md:inline-flex">
-            <Gem size={13} /> {trial > 0 ? `Prueba gratis · ${trial} ${trial === 1 ? 'día' : 'días'}` : 'Prueba finalizada'}
+            <Gem size={13} /> {trial > 0 ? t(trial === 1 ? 'Prueba gratis · {n} día' : 'Prueba gratis · {n} días', { n: trial }) : t('Prueba finalizada')}
           </Link>
+          <LangSwitcher />
           <ThemeToggle />
           <div className="flex items-center gap-2">
             <div className="grid h-9 w-9 place-items-center rounded-full bg-lilac-bg text-sm font-bold uppercase text-lilac" title={user?.email ?? ''}>{initial}</div>
-            <button onClick={signOut} title="Cerrar sesión" aria-label="Cerrar sesión" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-ink"><LogOut size={18} /></button>
+            <button onClick={signOut} title={t("Cerrar sesión")} aria-label={t("Cerrar sesión")} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-ink"><LogOut size={18} /></button>
           </div>
         </header>
 
@@ -192,7 +195,7 @@ export default function Layout() {
           {needsObra ? <PrimeraObra /> : (
             <AnimatePresence mode="wait">
               <motion.div key={location.pathname} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22, ease: 'easeOut' }}>
-                <Suspense fallback={<Card className="p-10 text-center text-sm text-muted">Cargando…</Card>}>{outlet}</Suspense>
+                <Suspense fallback={<Card className="p-10 text-center text-sm text-muted">{t("Cargando…")}</Card>}>{outlet}</Suspense>
               </motion.div>
             </AnimatePresence>
           )}

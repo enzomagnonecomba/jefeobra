@@ -7,6 +7,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ObraProvider } from './context/ObraContext';
 import { ToastProvider } from './components/Toast';
 import { ThemeProvider } from './context/ThemeContext';
+import { I18nProvider } from './i18n';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
@@ -17,7 +18,9 @@ createRoot(document.getElementById('root')!).render(
         <ToastProvider>
           <AuthProvider>
             <ObraProvider>
-              <App />
+              <I18nProvider>
+                <App />
+              </I18nProvider>
             </ObraProvider>
           </AuthProvider>
         </ToastProvider>

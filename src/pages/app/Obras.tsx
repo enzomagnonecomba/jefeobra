@@ -5,8 +5,13 @@ import { useObra } from '../../context/ObraContext';
 import { useToast } from '../../components/Toast';
 import { Badge, Button, Card, Field, Modal, PageHeader, fmtMoney } from '../../components/ui';
 import type { Obra } from '../../types';
+import { t } from '../../i18n';
 
-const ESTADO = { activa: { label: 'Activa', tone: 'sage' }, pausada: { label: 'Pausada', tone: 'peach' }, finalizada: { label: 'Finalizada', tone: 'slate' } } as const;
+const ESTADO = {
+  activa: { get label() { return t('Activa'); }, tone: 'sage' as const },
+  pausada: { get label() { return t('Pausada'); }, tone: 'peach' as const },
+  finalizada: { get label() { return t('Finalizada'); }, tone: 'slate' as const },
+};
 
 export default function Obras() {
   const { obras, obraActiva, seleccionar, crearObra, actualizarObra, eliminarObra } = useObra();
@@ -26,15 +31,15 @@ export default function Obras() {
     try {
       if (editing === 'new') await crearObra(values);
       else if (editing) await actualizarObra(editing.id, { ...values, estado: form.estado });
-      toast.ok('Obra guardada');
+      toast.ok(t('Obra guardada'));
       setEditing(null);
     } catch (err) { toast.error((err as Error).message); }
   }
 
   return (
     <div>
-      <PageHeader title="Mis obras" subtitle="Cada obra es un espacio independiente con sus propios datos" icon={Building2} tone="sage"
-        actions={<Button icon={Plus} onClick={() => open('new')}>Nueva obra</Button>} />
+      <PageHeader title={t("Mis obras")} subtitle={t("Cada obra es un espacio independiente con sus propios datos")} icon={Building2} tone="sage"
+        actions={<Button icon={Plus} onClick={() => open('new')}>{t("Nueva obra")}</Button>} />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {obras.map((o, i) => (
           <Card key={o.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0, transition: { delay: i * 0.04 } }} whileHover={{ y: -3 }}
@@ -43,29 +48,29 @@ export default function Obras() {
               <h3 className="font-bold">{o.nombre}</h3>
               <Badge tone={ESTADO[o.estado].tone}>{ESTADO[o.estado].label}</Badge>
             </div>
-            <p className="mb-1 flex items-center gap-1 text-sm text-muted"><MapPin size={14} /> {o.direccion || 'Sin dirección'}</p>
-            <p className="mb-4 text-sm text-muted">Presupuesto caja chica: <b className="text-ink">{fmtMoney(o.presupuesto_caja)}</b></p>
+            <p className="mb-1 flex items-center gap-1 text-sm text-muted"><MapPin size={14} /> {o.direccion || t('Sin dirección')}</p>
+            <p className="mb-4 text-sm text-muted">{t("Presupuesto caja chica:")} <b className="text-ink">{fmtMoney(o.presupuesto_caja)}</b></p>
             <div className="flex gap-2">
               {obraActiva?.id === o.id
-                ? <Badge tone="sage"><Check size={12} /> Obra activa</Badge>
-                : <Button variant="soft" onClick={() => seleccionar(o.id)}>Usar esta obra</Button>}
-              <Button variant="ghost" className="ml-auto" onClick={() => open(o)}>Editar</Button>
+                ? <Badge tone="sage"><Check size={12} /> {t("Obra activa")}</Badge>
+                : <Button variant="soft" onClick={() => seleccionar(o.id)}>{t("Usar esta obra")}</Button>}
+              <Button variant="ghost" className="ml-auto" onClick={() => open(o)}>{t("Editar")}</Button>
             </div>
           </Card>
         ))}
         <motion.button whileHover={{ y: -3 }} onClick={() => open('new')}
           className="grid min-h-40 place-items-center rounded-2xl border-2 border-dashed border-line text-sm font-semibold text-muted hover:border-slate-300 hover:text-ink">
-          <span className="flex items-center gap-2"><Plus size={18} /> Agregar obra</span>
+          <span className="flex items-center gap-2"><Plus size={18} /> {t("Agregar obra")}</span>
         </motion.button>
       </div>
 
-      <Modal open={editing !== null} onClose={() => setEditing(null)} title={editing === 'new' ? 'Nueva obra' : 'Editar obra'}>
+      <Modal open={editing !== null} onClose={() => setEditing(null)} title={editing === 'new' ? t('Nueva obra') : t('Editar obra')}>
         <form onSubmit={onSubmit} className="space-y-4">
-          <Field label="Nombre *"><input className="field" required value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} /></Field>
-          <Field label="Dirección"><input className="field" value={form.direccion} onChange={(e) => setForm({ ...form, direccion: e.target.value })} /></Field>
-          <Field label="Presupuesto de caja chica"><input type="number" min={0} className="field" value={form.presupuesto_caja} onChange={(e) => setForm({ ...form, presupuesto_caja: e.target.value })} /></Field>
+          <Field label={t("Nombre *")}><input className="field" required value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} /></Field>
+          <Field label={t("Dirección")}><input className="field" value={form.direccion} onChange={(e) => setForm({ ...form, direccion: e.target.value })} /></Field>
+          <Field label={t("Presupuesto de caja chica")}><input type="number" min={0} className="field" value={form.presupuesto_caja} onChange={(e) => setForm({ ...form, presupuesto_caja: e.target.value })} /></Field>
           {editing !== 'new' && (
-            <Field label="Estado">
+            <Field label={t("Estado")}>
               <select className="field" value={form.estado} onChange={(e) => setForm({ ...form, estado: e.target.value as Obra['estado'] })}>
                 {Object.entries(ESTADO).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
               </select>
@@ -74,13 +79,13 @@ export default function Obras() {
           <div className="flex justify-between pt-2">
             {editing && editing !== 'new' ? (
               <Button type="button" variant="danger" icon={Trash2} onClick={async () => {
-                if (!window.confirm(`¿Eliminar "${editing.nombre}" y TODOS sus datos (tareas, pedidos, caja…)? No se puede deshacer.`)) return;
-                await eliminarObra(editing.id); setEditing(null); toast.ok('Obra eliminada');
-              }}>Eliminar</Button>
+                if (!window.confirm(t('¿Eliminar "{x}" y TODOS sus datos (tareas, pedidos, caja…)? No se puede deshacer.', { x: editing.nombre }))) return;
+                await eliminarObra(editing.id); setEditing(null); toast.ok(t('Obra eliminada'));
+              }}>{t("Eliminar")}</Button>
             ) : <span />}
             <div className="flex gap-2">
-              <Button type="button" variant="ghost" onClick={() => setEditing(null)}>Cancelar</Button>
-              <Button type="submit">Guardar</Button>
+              <Button type="button" variant="ghost" onClick={() => setEditing(null)}>{t("Cancelar")}</Button>
+              <Button type="submit">{t("Guardar")}</Button>
             </div>
           </div>
         </form>

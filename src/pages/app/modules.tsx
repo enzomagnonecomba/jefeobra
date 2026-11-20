@@ -6,6 +6,7 @@ import { type CrudConfig } from '../../components/CrudModule';
 import { Badge, StatCard, daysUntil, fmtDate, fmtMoney } from '../../components/ui';
 import { useObra } from '../../context/ObraContext';
 import type { Row } from '../../types';
+import { t } from '../../i18n';
 
 type R = Row & Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -21,11 +22,11 @@ function CajaSummary({ rows }: { rows: R[] }) {
   const saldo = presupuesto + ing - egr;
   return (
     <div className="grid gap-4 sm:grid-cols-3">
-      <StatCard label="Ingresos" value={fmtMoney(ing)} icon={ArrowDownLeft} tone="sage"
-        hint={presupuesto ? `+ presupuesto inicial ${fmtMoney(presupuesto)}` : undefined} />
-      <StatCard label="Egresos" value={fmtMoney(egr)} icon={ArrowUpRight} tone="rose" />
-      <StatCard label="Saldo disponible" value={<span className={saldo < 0 ? 'text-peach' : ''}>{fmtMoney(saldo)}</span>} icon={Scale} tone={saldo < 0 ? 'peach' : 'sky'}
-        hint="Presupuesto + ingresos − egresos" />
+      <StatCard label={t("Ingresos")} value={fmtMoney(ing)} icon={ArrowDownLeft} tone="sage"
+        hint={presupuesto ? t('+ presupuesto inicial {x}', { x: fmtMoney(presupuesto) }) : undefined} />
+      <StatCard label={t("Egresos")} value={fmtMoney(egr)} icon={ArrowUpRight} tone="rose" />
+      <StatCard label={t("Saldo disponible")} value={<span className={saldo < 0 ? 'text-peach' : ''}>{fmtMoney(saldo)}</span>} icon={Scale} tone={saldo < 0 ? 'peach' : 'sky'}
+        hint={t("Presupuesto + ingresos − egresos")} />
     </div>
   );
 }
@@ -76,9 +77,9 @@ export const jornalesConfig: CrudConfig<R> = {
   ],
   summary: (rows) => (
     <div className="grid gap-4 sm:grid-cols-3">
-      <StatCard label="Personas registradas" value={new Set(rows.map((r) => r.trabajador)).size} icon={Users} tone="lilac" />
-      <StatCard label="Horas acumuladas" value={sum(rows, (r) => Number(r.horas)).toLocaleString('es-AR')} icon={Clock} tone="sky" />
-      <StatCard label="Costo de mano de obra" value={fmtMoney(sum(rows, (r) => Number(r.horas) * Number(r.tarifa_hora)))} icon={Wallet} tone="rose" />
+      <StatCard label={t("Personas registradas")} value={new Set(rows.map((r) => r.trabajador)).size} icon={Users} tone="lilac" />
+      <StatCard label={t("Horas acumuladas")} value={sum(rows, (r) => Number(r.horas)).toLocaleString('es-AR')} icon={Clock} tone="sky" />
+      <StatCard label={t("Costo de mano de obra")} value={fmtMoney(sum(rows, (r) => Number(r.horas) * Number(r.tarifa_hora)))} icon={Wallet} tone="rose" />
     </div>
   ),
 };
@@ -102,9 +103,9 @@ export const adicionalesConfig: CrudConfig<R> = {
   ],
   summary: (rows) => (
     <div className="grid gap-4 sm:grid-cols-3">
-      <StatCard label="Aprobados" value={fmtMoney(sum(rows.filter((r) => r.estado === 'aprobado'), (r) => Number(r.costo_estimado)))} icon={FilePlus2} tone="sage" />
-      <StatCard label="Pendientes de aprobación" value={fmtMoney(sum(rows.filter((r) => r.estado === 'propuesto'), (r) => Number(r.costo_estimado)))} icon={Clock} tone="peach" />
-      <StatCard label="Cantidad total" value={rows.length} icon={Scale} tone="rose" />
+      <StatCard label={t("Aprobados")} value={fmtMoney(sum(rows.filter((r) => r.estado === 'aprobado'), (r) => Number(r.costo_estimado)))} icon={FilePlus2} tone="sage" />
+      <StatCard label={t("Pendientes de aprobación")} value={fmtMoney(sum(rows.filter((r) => r.estado === 'propuesto'), (r) => Number(r.costo_estimado)))} icon={Clock} tone="peach" />
+      <StatCard label={t("Cantidad total")} value={rows.length} icon={Scale} tone="rose" />
     </div>
   ),
 };
@@ -169,7 +170,7 @@ export const volquetesConfig: CrudConfig<R> = {
     { key: 'fecha_retiro', label: 'Retiro', render: (r) => {
       if (!r.fecha_retiro) return <span className="text-slate-300">—</span>;
       const d = daysUntil(r.fecha_retiro);
-      return <span className="inline-flex items-center gap-2 tabular-nums">{fmtDate(r.fecha_retiro)}{r.estado === 'en_obra' && d <= 1 && <Badge tone="peach">{d < 0 ? 'Vencido' : d === 0 ? 'Hoy' : 'Mañana'}</Badge>}</span>;
+      return <span className="inline-flex items-center gap-2 tabular-nums">{fmtDate(r.fecha_retiro)}{r.estado === 'en_obra' && d <= 1 && <Badge tone="peach">{d < 0 ? t('Vencido') : d === 0 ? t('Hoy') : t('Mañana')}</Badge>}</span>;
     } },
     { key: 'costo', label: 'Costo', align: 'right' }, { key: 'estado', label: 'Estado' },
   ],
@@ -178,9 +179,9 @@ export const volquetesConfig: CrudConfig<R> = {
 // ---------------------------------------------------------------- SEGUROS
 const vencimiento = (hasta: string) => {
   const d = daysUntil(hasta);
-  if (d < 0) return { tone: 'rose' as const, label: `Vencida hace ${-d} d` };
-  if (d <= 30) return { tone: 'peach' as const, label: `Vence en ${d} d` };
-  return { tone: 'sage' as const, label: 'Vigente' };
+  if (d < 0) return { tone: 'rose' as const, label: t('Vencida hace {n} d', { n: -d }) };
+  if (d <= 30) return { tone: 'peach' as const, label: t('Vence en {n} d', { n: d }) };
+  return { tone: 'sage' as const, label: t('Vigente') };
 };
 
 export const segurosConfig: CrudConfig<R> = {
@@ -222,7 +223,7 @@ export const eppConfig: CrudConfig<R> = {
     { key: 'fecha', label: 'Fecha' }, { key: 'operario', label: 'Operario' }, { key: 'elemento', label: 'Elemento' },
     { key: 'talle', label: 'Talle' }, { key: 'cantidad', label: 'Cant.', align: 'right' },
     { key: 'proximo_recambio', label: 'Recambio', render: (r) => r.proximo_recambio
-      ? <span className="inline-flex items-center gap-2 tabular-nums">{fmtDate(r.proximo_recambio)}{daysUntil(r.proximo_recambio) <= 15 && <Badge tone="peach">Pronto</Badge>}</span>
+      ? <span className="inline-flex items-center gap-2 tabular-nums">{fmtDate(r.proximo_recambio)}{daysUntil(r.proximo_recambio) <= 15 && <Badge tone="peach">{t("Pronto")}</Badge>}</span>
       : <span className="text-slate-300">—</span> },
   ],
 };

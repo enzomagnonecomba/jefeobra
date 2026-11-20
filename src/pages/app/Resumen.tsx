@@ -7,6 +7,7 @@ import { useObra } from '../../context/ObraContext';
 import { Badge, Card, PageHeader, StatCard, daysUntil, fmtDate, fmtMoney } from '../../components/ui';
 import { ESTADO_PEDIDO } from './Pedidos';
 import type { CajaMovimiento, Pedido, Tarea } from '../../types';
+import { t } from '../../i18n';
 
 interface Data {
   tareas: Tarea[]; pedidos: Pedido[]; caja: CajaMovimiento[];
@@ -15,10 +16,10 @@ interface Data {
 }
 
 const COLS = [
-  { k: 'por_comenzar', label: 'Por comenzar', bar: 'bg-lilac' },
-  { k: 'en_curso', label: 'En curso', bar: 'bg-sky' },
-  { k: 'en_pausa', label: 'En pausa', bar: 'bg-peach' },
-  { k: 'terminada', label: 'Terminada', bar: 'bg-sage' },
+  { k: 'por_comenzar', get label() { return t('Por comenzar'); }, bar: 'bg-lilac' },
+  { k: 'en_curso', get label() { return t('En curso'); }, bar: 'bg-sky' },
+  { k: 'en_pausa', get label() { return t('En pausa'); }, bar: 'bg-peach' },
+  { k: 'terminada', get label() { return t('Terminada'); }, bar: 'bg-sage' },
 ] as const;
 
 export default function Resumen() {
@@ -36,7 +37,7 @@ export default function Resumen() {
   }, [obraActiva]);
 
   if (!obraActiva) return null;
-  if (!data) return <Card className="p-10 text-center text-sm text-muted">Cargando resumen…</Card>;
+  if (!data) return <Card className="p-10 text-center text-sm text-muted">{t("Cargando resumen…")}</Card>;
 
   const ing = data.caja.filter((m) => m.tipo === 'ingreso').reduce((a, m) => a + Number(m.monto), 0);
   const egr = data.caja.filter((m) => m.tipo === 'egreso').reduce((a, m) => a + Number(m.monto), 0);
@@ -46,35 +47,35 @@ export default function Resumen() {
   const saldo = fondos - egr;
   const usado = fondos ? Math.min(100, Math.round((egr / fondos) * 100)) : 0;
   const activos = data.pedidos.filter((p) => p.estado !== 'entregado');
-  const done = data.tareas.filter((t) => t.estado === 'terminada').length;
+  const done = data.tareas.filter((tk) => tk.estado === 'terminada').length;
   const avance = data.tareas.length ? Math.round((done / data.tareas.length) * 100) : 0;
   const alertas = data.seguros.filter((s) => daysUntil(s.vigencia_hasta) <= 30);
   const adicAprob = data.adicionales.filter((a) => a.estado === 'aprobado').reduce((a, x) => a + Number(x.costo_estimado), 0);
 
   return (
     <div>
-      <PageHeader title="Resumen de obra" subtitle={`${obraActiva.nombre}${obraActiva.direccion ? ` · ${obraActiva.direccion}` : ''}`} icon={LayoutDashboard} tone="sage" />
+      <PageHeader title={t("Resumen de obra")} subtitle={`${obraActiva.nombre}${obraActiva.direccion ? ` · ${obraActiva.direccion}` : ''}`} icon={LayoutDashboard} tone="sage" />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Saldo caja chica" value={fmtMoney(saldo)} icon={Wallet} tone={saldo < 0 ? 'peach' : 'rose'}
+        <StatCard label={t("Saldo caja chica")} value={fmtMoney(saldo)} icon={Wallet} tone={saldo < 0 ? 'peach' : 'rose'}
           hint={fondos ? (
-            <div><div className="mb-1 flex justify-between"><span>Gastado de {fmtMoney(fondos)}</span><span>{usado}%</span></div>
+            <div><div className="mb-1 flex justify-between"><span>{t('Gastado de {x}', { x: fmtMoney(fondos) })}</span><span>{usado}%</span></div>
               <div className="h-1.5 overflow-hidden rounded-full bg-slate-100"><motion.div className={`h-full ${usado > 85 ? 'bg-peach' : 'bg-rose'}`} initial={{ width: 0 }} animate={{ width: `${usado}%` }} transition={{ duration: 0.8 }} /></div></div>
-          ) : 'Sin presupuesto asignado — editalo en Mis obras'} />
-        <StatCard label="Pedidos activos" value={activos.length} icon={Package} tone="peach" hint={`${data.pedidos.filter((p) => p.estado === 'pendiente').length} pendientes de aprobación`} />
-        <StatCard label="Avance de tareas" value={`${avance}%`} icon={KanbanSquare} tone="sky" hint={`${done} de ${data.tareas.length} terminadas`} />
-        <StatCard label="Adicionales aprobados" value={fmtMoney(adicAprob)} icon={FilePlus2} tone="lilac" hint={`${data.adicionales.filter((a) => a.estado === 'propuesto').length} esperando aprobación`} />
+          ) : t('Sin presupuesto asignado — editalo en Mis obras')} />
+        <StatCard label={t("Pedidos activos")} value={activos.length} icon={Package} tone="peach" hint={t('{n} pendientes de aprobación', { n: data.pedidos.filter((p) => p.estado === 'pendiente').length })} />
+        <StatCard label={t("Avance de tareas")} value={`${avance}%`} icon={KanbanSquare} tone="sky" hint={t('{a} de {b} terminadas', { a: done, b: data.tareas.length })} />
+        <StatCard label={t("Adicionales aprobados")} value={fmtMoney(adicAprob)} icon={FilePlus2} tone="lilac" hint={t('{n} esperando aprobación', { n: data.adicionales.filter((a) => a.estado === 'propuesto').length })} />
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-3">
         <Card className="p-6 lg:col-span-2">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-bold">Estado del tablero</h2>
-            <Link to="/app/seguimiento" className="inline-flex items-center text-sm font-semibold text-sky hover:underline">Ver tablero <ChevronRight size={16} /></Link>
+            <h2 className="font-bold">{t("Estado del tablero")}</h2>
+            <Link to="/app/seguimiento" className="inline-flex items-center text-sm font-semibold text-sky hover:underline">{t("Ver tablero")} <ChevronRight size={16} /></Link>
           </div>
           <div className="mb-5 flex h-3 overflow-hidden rounded-full bg-slate-100">
             {COLS.map((c, i) => {
-              const n = data.tareas.filter((t) => t.estado === c.k).length;
+              const n = data.tareas.filter((tk) => tk.estado === c.k).length;
               return n ? <motion.div key={c.k} className={c.bar} initial={{ width: 0 }} animate={{ width: `${(n / data.tareas.length) * 100}%` }} transition={{ delay: i * 0.1, duration: 0.6 }} /> : null;
             })}
           </div>
@@ -82,31 +83,31 @@ export default function Resumen() {
             {COLS.map((c) => (
               <div key={c.k} className="rounded-xl bg-slate-50 p-3">
                 <div className="flex items-center gap-2 text-xs font-semibold text-muted"><span className={`h-2 w-2 rounded-full ${c.bar}`} />{c.label}</div>
-                <p className="mt-1 text-2xl font-bold">{data.tareas.filter((t) => t.estado === c.k).length}</p>
+                <p className="mt-1 text-2xl font-bold">{data.tareas.filter((tk) => tk.estado === c.k).length}</p>
               </div>
             ))}
           </div>
         </Card>
 
         <Card className="p-6">
-          <h2 className="mb-4 flex items-center gap-2 font-bold"><ShieldAlert size={18} className="text-peach" /> Alertas</h2>
+          <h2 className="mb-4 flex items-center gap-2 font-bold"><ShieldAlert size={18} className="text-peach" /> {t("Alertas")}</h2>
           {alertas.length === 0 && activos.filter((p) => p.prioridad === 'critica').length === 0 ? (
-            <p className="rounded-xl bg-sage-bg p-4 text-sm font-medium text-sage">Todo en orden. Sin vencimientos próximos.</p>
+            <p className="rounded-xl bg-sage-bg p-4 text-sm font-medium text-sage">{t("Todo en orden. Sin vencimientos próximos.")}</p>
           ) : (
             <ul className="space-y-2 text-sm">
               {alertas.map((s) => {
                 const d = daysUntil(s.vigencia_hasta);
-                return <li key={s.id} className="rounded-xl bg-peach-bg p-3 text-peach"><b>Póliza {s.aseguradora}</b> {d < 0 ? `vencida hace ${-d} días` : `vence en ${d} días`}</li>;
+                return <li key={s.id} className="rounded-xl bg-peach-bg p-3 text-peach"><b>{t('Póliza {x}', { x: s.aseguradora })}</b> {d < 0 ? t('vencida hace {n} días', { n: -d }) : t('vence en {n} días', { n: d })}</li>;
               })}
-              {activos.filter((p) => p.prioridad === 'critica').map((p) => <li key={p.id} className="rounded-xl bg-rose-bg p-3 text-rose">Pedido crítico: <b>{p.titulo}</b></li>)}
+              {activos.filter((p) => p.prioridad === 'critica').map((p) => <li key={p.id} className="rounded-xl bg-rose-bg p-3 text-rose">{t("Pedido crítico:")} <b>{p.titulo}</b></li>)}
             </ul>
           )}
         </Card>
 
         <Card className="p-6 lg:col-span-2">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-bold">Últimos movimientos de caja</h2>
-            <Link to="/app/obra/caja-chica" className="inline-flex items-center text-sm font-semibold text-rose hover:underline">Caja chica <ChevronRight size={16} /></Link>
+            <h2 className="font-bold">{t("Últimos movimientos de caja")}</h2>
+            <Link to="/app/obra/caja-chica" className="inline-flex items-center text-sm font-semibold text-rose hover:underline">{t("Caja chica")} <ChevronRight size={16} /></Link>
           </div>
           <ul className="divide-y divide-line">
             {data.caja.slice(0, 5).map((m) => (
@@ -119,14 +120,14 @@ export default function Resumen() {
                 <span className={`w-28 text-right font-semibold tabular-nums ${m.tipo === 'ingreso' ? 'text-sage' : 'text-rose'}`}>{m.tipo === 'ingreso' ? '+' : '−'}{fmtMoney(m.monto)}</span>
               </li>
             ))}
-            {data.caja.length === 0 && <li className="py-4 text-sm text-muted">Sin movimientos.</li>}
+            {data.caja.length === 0 && <li className="py-4 text-sm text-muted">{t("Sin movimientos.")}</li>}
           </ul>
         </Card>
 
         <Card className="p-6">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-bold">Pedidos recientes</h2>
-            <Link to="/app/pedidos/mis-pedidos" className="text-sm font-semibold text-peach hover:underline">Ver todos</Link>
+            <h2 className="font-bold">{t("Pedidos recientes")}</h2>
+            <Link to="/app/pedidos/mis-pedidos" className="text-sm font-semibold text-peach hover:underline">{t("Ver todos")}</Link>
           </div>
           <ul className="space-y-2">
             {data.pedidos.slice(0, 5).map((p) => (
@@ -135,7 +136,7 @@ export default function Resumen() {
                 <Badge tone={ESTADO_PEDIDO[p.estado].tone}>{ESTADO_PEDIDO[p.estado].label}</Badge>
               </li>
             ))}
-            {data.pedidos.length === 0 && <li className="text-sm text-muted">Sin pedidos.</li>}
+            {data.pedidos.length === 0 && <li className="text-sm text-muted">{t("Sin pedidos.")}</li>}
           </ul>
         </Card>
       </div>

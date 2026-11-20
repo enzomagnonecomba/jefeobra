@@ -1,10 +1,11 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { t } from '../i18n';
 
 export function ThemeToggle({ className = '' }: { className?: string }) {
   const { dark, toggle } = useTheme();
-  const label = dark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
+  const label = dark ? t('Cambiar a modo claro') : t('Cambiar a modo oscuro');
   return (
     <button onClick={toggle} aria-label={label} title={label}
       className={`relative grid h-9 w-9 place-items-center overflow-hidden rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-ink ${className}`}>
