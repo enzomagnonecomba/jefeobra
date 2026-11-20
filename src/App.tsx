@@ -12,6 +12,7 @@ const Seguimiento = lazy(() => import('./pages/app/Seguimiento'));
 const Minutas = lazy(() => import('./pages/app/Minutas'));
 const Resumen = lazy(() => import('./pages/app/Resumen'));
 const Obras = lazy(() => import('./pages/app/Obras'));
+const Planes = lazy(() => import('./pages/app/Planes'));
 const NuevoPedido = lazy(() => import('./pages/app/Pedidos').then((m) => ({ default: m.NuevoPedido })));
 const MisPedidos = lazy(() => import('./pages/app/Pedidos').then((m) => ({ default: m.MisPedidos })));
 const Calculos = lazy(() => import('./pages/app/Pedidos').then((m) => ({ default: m.Calculos })));
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/app" element={<RequireAuth><Layout /></RequireAuth>}>
           <Route index element={<Navigate to="obra/resumen" replace />} />
           <Route path="obras" element={<Obras />} />
+          <Route path="planes" element={<Planes />} />
           <Route path="seguimiento" element={<Seguimiento />} />
 
           <Route path="pedidos/nuevo" element={<NuevoPedido />} />

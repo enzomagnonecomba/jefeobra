@@ -7,14 +7,16 @@ interface AuthCtx {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, nombre: string, estudio: string) => Promise<{ needsConfirmation: boolean }>;
+  signUp: (email: string, password: string, nombre: string, estudio: string, plan?: string) => Promise<{ needsConfirmation: boolean }>;
+  /** Guarda el plan elegido en los metadatos del usuario (todavía sin cobro). */
+  setPlan: (plan: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   resendConfirmation: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthCtx | null>(null);
-const MOCK_USER = { id: 'demo-user', email: 'demo@obra.local' } as User;
+const MOCK_USER = { id: 'demo-user', email: 'demo@obra.local', created_at: new Date().toISOString(), user_metadata: {} } as unknown as User;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -47,12 +49,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
   };
 
-  const signUp = async (email: string, password: string, nombre: string, estudio: string) => {
+  const signUp = async (email: string, password: string, nombre: string, estudio: string, plan = 'profesional') => {
     if (!hasSupabase) { await signIn(email, password); return { needsConfirmation: false }; }
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { nombre, estudio }, emailRedirectTo: `${window.location.origin}/app` },
+      options: { data: { nombre, estudio, plan }, emailRedirectTo: `${window.location.origin}/app` },
     });
     if (error) throw error;
     // Con confirmación de email activa, Supabase no devuelve error si el email ya
@@ -61,6 +63,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw Object.assign(new Error('User already registered'), { code: 'user_already_exists' });
     }
     return { needsConfirmation: !data.session };
+  };
+
+  const setPlan = async (plan: string) => {
+    if (!hasSupabase) { setUser((u) => (u ? ({ ...u, user_metadata: { ...u.user_metadata, plan } } as User) : u)); return; }
+    const { data, error } = await supabase.auth.updateUser({ data: { plan } });
+    if (error) throw error;
+    setUser(data.user);
   };
 
   const resendConfirmation = async (email: string) => {
@@ -87,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, resetPassword, resendConfirmation, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, setPlan, resetPassword, resendConfirmation, signOut }}>
       {children}
     </AuthContext.Provider>
   );

@@ -6,6 +6,9 @@ import {
 import { Logo } from '../components/Logo';
 import { useAuth } from '../context/AuthContext';
 import { TONE, type Tone } from '../components/ui';
+import { ThemeToggle } from '../components/ThemeToggle';
+import { Pricing } from '../components/Pricing';
+import { TRIAL_DAYS } from '../lib/planes';
 
 const fadeUp: Variants = { hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } } };
 const stagger: Variants = { show: { transition: { staggerChildren: 0.08 } } };
@@ -72,8 +75,10 @@ export default function Landing() {
           <nav className="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
             <a href="#que-hacemos" className="hover:text-ink">Qué hacemos</a>
             <a href="#quienes-somos" className="hover:text-ink">Quiénes somos</a>
+            <a href="#planes" className="hover:text-ink">Planes</a>
           </nav>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             {user ? (
               <Link to="/app" className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white shadow-soft hover:bg-slate-700">Ir al panel <ArrowRight size={16} /></Link>
             ) : (
@@ -92,7 +97,7 @@ export default function Landing() {
           <div className="absolute left-[10%] top-10 h-72 w-72 rounded-full bg-lilac-bg blur-3xl" />
           <div className="absolute right-[8%] top-40 h-72 w-72 rounded-full bg-sky-bg blur-3xl" />
           <div className="absolute bottom-0 left-1/3 h-60 w-60 rounded-full bg-sage-bg blur-3xl" />
-          <div className="absolute inset-0 bg-[linear-gradient(#e2e8f0_1px,transparent_1px),linear-gradient(90deg,#e2e8f0_1px,transparent_1px)] bg-[size:48px_48px] opacity-30 [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(var(--color-line)_1px,transparent_1px),linear-gradient(90deg,var(--color-line)_1px,transparent_1px)] bg-[size:48px_48px] opacity-30 [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]" />
         </div>
         <motion.div variants={stagger} initial="hidden" animate="show" className="mx-auto max-w-3xl text-center">
           <motion.span variants={fadeUp} className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-soft">
@@ -106,7 +111,7 @@ export default function Landing() {
           </motion.p>
           <motion.div variants={fadeUp} className="mt-8 flex flex-wrap justify-center gap-3">
             <Link to={user ? '/app' : '/registro'} className="group inline-flex items-center gap-2 rounded-2xl bg-ink px-6 py-3.5 font-semibold text-white shadow-lift transition hover:-translate-y-0.5">
-              Empezar gratis <ArrowRight size={18} className="transition group-hover:translate-x-1" />
+              Probar {TRIAL_DAYS} días gratis <ArrowRight size={18} className="transition group-hover:translate-x-1" />
             </Link>
             <a href="#que-hacemos" className="inline-flex items-center gap-2 rounded-2xl border border-line bg-white px-6 py-3.5 font-semibold shadow-soft hover:border-slate-300">Ver cómo funciona</a>
           </motion.div>
@@ -164,6 +169,18 @@ export default function Landing() {
               </motion.div>
             ))}
           </motion.div>
+        </div>
+      </section>
+
+      {/* PLANES */}
+      <section id="planes" className="scroll-mt-20 px-4 py-24 sm:px-6">
+        <div className="mx-auto max-w-6xl">
+          <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={stagger} className="mx-auto mb-10 max-w-2xl text-center">
+            <motion.p variants={fadeUp} className="text-sm font-bold uppercase tracking-[0.15em] text-sky">Planes</motion.p>
+            <motion.h2 variants={fadeUp} className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">Empezá gratis. Elegí cuando estés listo.</motion.h2>
+            <motion.p variants={fadeUp} className="mt-4 text-slate-600">Todos los planes incluyen {TRIAL_DAYS} días de prueba sin tarjeta de crédito.</motion.p>
+          </motion.div>
+          <Pricing />
         </div>
       </section>
 

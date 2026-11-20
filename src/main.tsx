@@ -6,11 +6,13 @@ import App from './App';
 import { AuthProvider } from './context/AuthContext';
 import { ObraProvider } from './context/ObraContext';
 import { ToastProvider } from './components/Toast';
+import { ThemeProvider } from './context/ThemeContext';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <MotionConfig reducedMotion="user">
+      <ThemeProvider>
       <BrowserRouter>
         <ToastProvider>
           <AuthProvider>
@@ -20,6 +22,7 @@ createRoot(document.getElementById('root')!).render(
           </AuthProvider>
         </ToastProvider>
       </BrowserRouter>
+      </ThemeProvider>
     </MotionConfig>
   </StrictMode>,
 );
