@@ -9,13 +9,13 @@
 create extension if not exists pgcrypto;
 
 -- ---------------------------------------------------------------------
---  (Opcional) RESET del esquema anterior basado en "estudios".
---  Si ya corriste la versión vieja, descomentá este bloque UNA vez.
---  ATENCIÓN: borra todos los datos de esas tablas.
+--  (Opcional) RESET completo: borra todas las tablas de la app.
+--  Descomentar solo si necesitás empezar de cero. Borra todos los datos.
 -- ---------------------------------------------------------------------
 -- drop table if exists tareas, pedidos, caja_movimientos, jornales, adicionales,
 --   manifiestos, minutas, servicios_fletes, servicios_volquetes, seguros,
---   epp_entregas, inventario_items, obras, profiles, estudios cascade;
+--   epp_entregas, inventario_items, fletes, volquetes, herramientas,
+--   obras, profiles, estudios cascade;
 -- drop function if exists public.puede_ver_obra(uuid);
 -- drop function if exists public.user_estudio_id();
 
@@ -304,7 +304,11 @@ create policy "profile_own" on profiles for all to authenticated
   using ((select auth.uid()) = id)
   with check ((select auth.uid()) = id);
 
--- Sin acceso anónimo a nada.
+-- Permisos de tabla: RLS filtra filas, pero el rol primero necesita el GRANT.
+-- Los usuarios logueados (authenticated) operan; los anónimos no ven nada.
+grant usage on schema public to authenticated;
+grant select, insert, update, delete on all tables in schema public to authenticated;
+alter default privileges in schema public grant select, insert, update, delete on tables to authenticated;
 revoke all on all tables in schema public from anon;
 
 -- =====================================================================
