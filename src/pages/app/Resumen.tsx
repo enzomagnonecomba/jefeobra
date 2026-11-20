@@ -40,9 +40,11 @@ export default function Resumen() {
 
   const ing = data.caja.filter((m) => m.tipo === 'ingreso').reduce((a, m) => a + Number(m.monto), 0);
   const egr = data.caja.filter((m) => m.tipo === 'egreso').reduce((a, m) => a + Number(m.monto), 0);
-  const saldo = ing - egr;
+  // El presupuesto asignado a la obra es el fondo inicial de la caja chica.
   const presupuesto = Number(obraActiva.presupuesto_caja) || 0;
-  const usado = presupuesto ? Math.min(100, Math.round((egr / presupuesto) * 100)) : 0;
+  const fondos = presupuesto + ing;
+  const saldo = fondos - egr;
+  const usado = fondos ? Math.min(100, Math.round((egr / fondos) * 100)) : 0;
   const activos = data.pedidos.filter((p) => p.estado !== 'entregado');
   const done = data.tareas.filter((t) => t.estado === 'terminada').length;
   const avance = data.tareas.length ? Math.round((done / data.tareas.length) * 100) : 0;
@@ -55,10 +57,10 @@ export default function Resumen() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Saldo caja chica" value={fmtMoney(saldo)} icon={Wallet} tone={saldo < 0 ? 'peach' : 'rose'}
-          hint={presupuesto ? (
-            <div><div className="mb-1 flex justify-between"><span>Gastado del presupuesto</span><span>{usado}%</span></div>
+          hint={fondos ? (
+            <div><div className="mb-1 flex justify-between"><span>Gastado de {fmtMoney(fondos)}</span><span>{usado}%</span></div>
               <div className="h-1.5 overflow-hidden rounded-full bg-slate-100"><motion.div className={`h-full ${usado > 85 ? 'bg-peach' : 'bg-rose'}`} initial={{ width: 0 }} animate={{ width: `${usado}%` }} transition={{ duration: 0.8 }} /></div></div>
-          ) : 'Sin presupuesto asignado'} />
+          ) : 'Sin presupuesto asignado — editalo en Mis obras'} />
         <StatCard label="Pedidos activos" value={activos.length} icon={Package} tone="peach" hint={`${data.pedidos.filter((p) => p.estado === 'pendiente').length} pendientes de aprobación`} />
         <StatCard label="Avance de tareas" value={`${avance}%`} icon={KanbanSquare} tone="sky" hint={`${done} de ${data.tareas.length} terminadas`} />
         <StatCard label="Adicionales aprobados" value={fmtMoney(adicAprob)} icon={FilePlus2} tone="lilac" hint={`${data.adicionales.filter((a) => a.estado === 'propuesto').length} esperando aprobación`} />
