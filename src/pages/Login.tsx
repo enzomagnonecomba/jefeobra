@@ -19,7 +19,7 @@ function Input({ icon: Icon, ...rest }: { icon: typeof Mail } & React.InputHTMLA
 }
 
 export default function Login() {
-  const { user, signIn, signUp, resetPassword } = useAuth();
+  const { user, signIn, signUp, resetPassword, resendConfirmation } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [modo, setModo] = useState<Modo>(location.pathname === '/registro' ? 'registro' : 'login');
@@ -28,7 +28,7 @@ export default function Login() {
   const [nombre, setNombre] = useState('');
   const [estudio, setEstudio] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ text: string; action?: 'login' | 'registro' | 'reenviar' } | null>(null);
   const [busy, setBusy] = useState(false);
 
   if (user) return <Navigate to="/app" replace />;
@@ -52,8 +52,34 @@ export default function Login() {
         setMsg('Si el email existe, te enviamos un enlace para restablecer la contraseña.');
       }
     } catch (err) {
-      const m = (err as Error).message;
-      setError(m === 'Invalid login credentials' ? 'Email o contraseña incorrectos.' : m);
+      const { code, message } = err as { code?: string; message: string };
+      const is = (c: string, m: string) => code === c || message === m;
+      if (is('user_already_exists', 'User already registered')) {
+        setError({ text: 'Ya existe una cuenta con este email.', action: 'login' });
+      } else if (is('invalid_credentials', 'Invalid login credentials')) {
+        setError({ text: 'Email o contraseña incorrectos. Si todavía no tenés cuenta, registrate.', action: 'registro' });
+      } else if (is('email_not_confirmed', 'Email not confirmed')) {
+        setError({ text: 'Todavía no confirmaste tu email. Revisá tu bandeja (y spam).', action: 'reenviar' });
+      } else if (code === 'over_email_send_rate_limit' || /rate limit/i.test(message)) {
+        setError({ text: 'Demasiados intentos. Esperá unos minutos y volvé a probar.' });
+      } else if (code === 'weak_password') {
+        setError({ text: 'La contraseña es muy débil. Usá al menos 6 caracteres con letras y números.' });
+      } else {
+        setError({ text: message });
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function reenviar() {
+    setBusy(true);
+    try {
+      await resendConfirmation(email);
+      setError(null);
+      setMsg('Te reenviamos el email de confirmación.');
+    } catch (err) {
+      setError({ text: (err as Error).message });
     } finally {
       setBusy(false);
     }
@@ -103,7 +129,14 @@ export default function Login() {
                       minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} required />
                   )}
 
-                  {error && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-peach-bg px-3 py-2 text-sm font-medium text-peach">{error}</motion.p>}
+                  {error && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-peach-bg px-3 py-2 text-sm font-medium text-peach">
+                      {error.text}
+                      {error.action === 'login' && <> <button type="button" onClick={() => cambiar('login')} className="font-bold underline">Ingresá</button> o <button type="button" onClick={() => cambiar('recuperar')} className="font-bold underline">recuperá tu contraseña</button>.</>}
+                      {error.action === 'registro' && <> <button type="button" onClick={() => cambiar('registro')} className="font-bold underline">Crear cuenta</button></>}
+                      {error.action === 'reenviar' && <> <button type="button" onClick={reenviar} disabled={busy} className="font-bold underline">Reenviar email</button></>}
+                    </motion.div>
+                  )}
                   {msg && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-sage-bg px-3 py-2 text-sm font-medium text-sage">{msg}</motion.p>}
 
                   <Button type="submit" disabled={busy} className="w-full py-3">
