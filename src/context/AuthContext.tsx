@@ -9,6 +9,7 @@ interface AuthCtx {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, nombre: string, estudio: string) => Promise<{ needsConfirmation: boolean }>;
   resetPassword: (email: string) => Promise<void>;
+  resendConfirmation: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -54,7 +55,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       options: { data: { nombre, estudio }, emailRedirectTo: `${window.location.origin}/app` },
     });
     if (error) throw error;
+    // Con confirmación de email activa, Supabase no devuelve error si el email ya
+    // existe: responde un usuario "falso" sin identidades. Lo detectamos acá.
+    if (data.user && data.user.identities?.length === 0) {
+      throw Object.assign(new Error('User already registered'), { code: 'user_already_exists' });
+    }
     return { needsConfirmation: !data.session };
+  };
+
+  const resendConfirmation = async (email: string) => {
+    if (!hasSupabase) return;
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/app` },
+    });
+    if (error) throw error;
   };
 
   const resetPassword = async (email: string) => {
@@ -71,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, resetPassword, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, resetPassword, resendConfirmation, signOut }}>
       {children}
     </AuthContext.Provider>
   );
