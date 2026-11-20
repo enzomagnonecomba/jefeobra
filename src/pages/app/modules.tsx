@@ -16,13 +16,16 @@ function CajaSummary({ rows }: { rows: R[] }) {
   const { obraActiva } = useObra();
   const ing = sum(rows.filter((r) => r.tipo === 'ingreso'), (r) => Number(r.monto));
   const egr = sum(rows.filter((r) => r.tipo === 'egreso'), (r) => Number(r.monto));
-  const saldo = ing - egr;
+  // El presupuesto asignado a la obra es el fondo inicial de la caja chica.
+  const presupuesto = Number(obraActiva?.presupuesto_caja) || 0;
+  const saldo = presupuesto + ing - egr;
   return (
     <div className="grid gap-4 sm:grid-cols-3">
-      <StatCard label="Ingresos" value={fmtMoney(ing)} icon={ArrowDownLeft} tone="sage" />
+      <StatCard label="Ingresos" value={fmtMoney(ing)} icon={ArrowDownLeft} tone="sage"
+        hint={presupuesto ? `+ presupuesto inicial ${fmtMoney(presupuesto)}` : undefined} />
       <StatCard label="Egresos" value={fmtMoney(egr)} icon={ArrowUpRight} tone="rose" />
       <StatCard label="Saldo disponible" value={<span className={saldo < 0 ? 'text-peach' : ''}>{fmtMoney(saldo)}</span>} icon={Scale} tone={saldo < 0 ? 'peach' : 'sky'}
-        hint={obraActiva?.presupuesto_caja ? `Presupuesto asignado: ${fmtMoney(obraActiva.presupuesto_caja)}` : undefined} />
+        hint="Presupuesto + ingresos − egresos" />
     </div>
   );
 }

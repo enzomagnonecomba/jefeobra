@@ -150,7 +150,7 @@ export default function CrudModule<T extends Row>({ config }: { config: CrudConf
       <PageHeader title={title} subtitle={subtitle} icon={icon} tone={tone}
         actions={<Button icon={Plus} onClick={() => openForm('new')}>Nuevo {singular.toLowerCase()}</Button>} />
 
-      {summary && rows.length > 0 && <div className="mb-6">{summary(rawRows)}</div>}
+      {summary && !loading && <div className="mb-6">{summary(rawRows)}</div>}
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="relative min-w-[220px] flex-1 sm:max-w-xs">
