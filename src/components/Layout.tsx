@@ -11,6 +11,7 @@ import { useObra } from '../context/ObraContext';
 import { hasSupabase } from '../lib/supabase';
 import { Logo } from './Logo';
 import { Button, Card, Field } from './ui';
+import { useToast } from './Toast';
 
 interface NavItem { to: string; label: string; icon: LucideIcon }
 export const NAV: { title: string; items: NavItem[] }[] = [
@@ -86,9 +87,17 @@ function ObraSelector() {
 
 function PrimeraObra() {
   const { crearObra } = useObra();
+  const toast = useToast();
   const [nombre, setNombre] = useState('');
   const [direccion, setDireccion] = useState('');
-  const submit = async (e: FormEvent) => { e.preventDefault(); await crearObra({ nombre, direccion: direccion || null, presupuesto_caja: 0 }); };
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    try {
+      await crearObra({ nombre, direccion: direccion || null, presupuesto_caja: 0 });
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+  };
   return (
     <Card className="mx-auto mt-10 max-w-md p-8" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
       <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-sage-bg text-sage"><Building2 size={22} /></div>
