@@ -1,12 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const env = import.meta.env;
+const url = (env.VITE_SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL) as string | undefined;
+const key = (env.VITE_SUPABASE_ANON_KEY ||
+  env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  env.NEXT_PUBLIC_SUPABASE_ANON_KEY) as string | undefined;
 
-export const hasSupabase = Boolean(url && key);
+const isPlaceholder = (v?: string) => !v || v.includes('TU-PROYECTO') || v.startsWith('tu-');
 
-export const supabase = createClient(
-  url ?? 'http://localhost',
-  key ?? 'placeholder',
-  { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } },
-);
+/** Sin credenciales reales la app corre en "modo demo" con datos en localStorage. */
+export const hasSupabase = !isPlaceholder(url) && !isPlaceholder(key);
+
+export const supabase = createClient(hasSupabase ? url! : "http://localhost", hasSupabase ? key! : "placeholder", {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+});

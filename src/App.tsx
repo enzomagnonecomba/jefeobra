@@ -1,26 +1,54 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import Layout from './components/Layout';
 import RequireAuth from './components/RequireAuth';
-import EnDesarrollo from './components/EnDesarrollo';
+import Landing from './pages/Landing';
 import Login from './pages/Login';
 import ResetPassword from './pages/ResetPassword';
-import Resumen from './pages/Resumen';
-import Tareas from './pages/Tareas';
+import { Logo } from './components/Logo';
+
+// El dashboard se carga bajo demanda: la landing queda liviana.
+const Layout = lazy(() => import('./components/Layout'));
+const Seguimiento = lazy(() => import('./pages/app/Seguimiento'));
+const Minutas = lazy(() => import('./pages/app/Minutas'));
+const Resumen = lazy(() => import('./pages/app/Resumen'));
+const Obras = lazy(() => import('./pages/app/Obras'));
+const NuevoPedido = lazy(() => import('./pages/app/Pedidos').then((m) => ({ default: m.NuevoPedido })));
+const MisPedidos = lazy(() => import('./pages/app/Pedidos').then((m) => ({ default: m.MisPedidos })));
+const Calculos = lazy(() => import('./pages/app/Pedidos').then((m) => ({ default: m.Calculos })));
+const CrudPage = lazy(() => import('./pages/app/CrudPage'));
+
+const Loading = () => <div className="grid min-h-[50vh] place-items-center"><div className="animate-pulse"><Logo compact /></div></div>;
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route element={<RequireAuth><Layout /></RequireAuth>}>
-        <Route index element={<Resumen />} />
-        <Route path="tareas" element={<Tareas />} />
-        <Route path="pedidos" element={<EnDesarrollo titulo="Pedidos" detalle="Próxima iteración: formulario de nuevo pedido y listado con estados. Tabla: pedidos." />} />
-        <Route path="obra" element={<EnDesarrollo titulo="Obra" detalle="Próxima iteración: caja chica, jornales, adicionales, manifiestos y minutas. Tablas listas en schema.sql." />} />
-        <Route path="servicios" element={<EnDesarrollo titulo="Servicios" detalle="Próxima iteración: fletes, volquetes y seguros con alertas de vencimiento." />} />
-        <Route path="recursos" element={<EnDesarrollo titulo="Recursos" detalle="Próxima iteración: EPP por operario e inventario de herramientas." />} />
+    <Suspense fallback={<Loading />}>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/registro" element={<Login />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+
+        <Route path="/app" element={<RequireAuth><Layout /></RequireAuth>}>
+          <Route index element={<Navigate to="obra/resumen" replace />} />
+          <Route path="obras" element={<Obras />} />
+          <Route path="seguimiento" element={<Seguimiento />} />
+
+          <Route path="pedidos/nuevo" element={<NuevoPedido />} />
+          <Route path="pedidos/mis-pedidos" element={<MisPedidos />} />
+          <Route path="pedidos/calculos" element={<Calculos />} />
+
+          <Route path="obra/resumen" element={<Resumen />} />
+          <Route path="obra/minutas" element={<Minutas />} />
+
+          {/* Módulos CRUD configurables: caja-chica, jornales, adicionales, manifiesto,
+              fletes, volquetes, seguros, epp, herramientas */}
+          <Route path=":seccion/:modulo" element={<CrudPage />} />
+
+          <Route path="*" element={<Navigate to="/app" replace />} />
+        </Route>
+
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Route>
-    </Routes>
+      </Routes>
+    </Suspense>
   );
 }

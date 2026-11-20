@@ -1,13 +1,28 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowLeft, Mail, Lock, User, Building2, KanbanSquare, Wallet, PackageCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { hasSupabase } from '../lib/supabase';
+import { Logo } from '../components/Logo';
+import { Button } from '../components/ui';
 
 type Modo = 'login' | 'registro' | 'recuperar';
-const input = 'w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-base';
+
+function Input({ icon: Icon, ...rest }: { icon: typeof Mail } & React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <div className="relative">
+      <Icon size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+      <input className="field py-3 pl-10" {...rest} />
+    </div>
+  );
+}
 
 export default function Login() {
   const { user, signIn, signUp, resetPassword } = useAuth();
-  const [modo, setModo] = useState<Modo>('login');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [modo, setModo] = useState<Modo>(location.pathname === '/registro' ? 'registro' : 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [nombre, setNombre] = useState('');
@@ -16,7 +31,12 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  if (user) return <Navigate to="/" replace />;
+  if (user) return <Navigate to="/app" replace />;
+
+  const cambiar = (m: Modo) => {
+    setModo(m); setError(null); setMsg(null);
+    if (m !== 'recuperar') navigate(m === 'registro' ? '/registro' : '/login', { replace: true });
+  };
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -24,56 +44,109 @@ export default function Login() {
     try {
       if (modo === 'login') await signIn(email, password);
       if (modo === 'registro') {
-        await signUp(email, password, nombre, estudio);
-        setMsg('Revisá tu email para confirmar la cuenta.');
+        const { needsConfirmation } = await signUp(email, password, nombre, estudio);
+        if (needsConfirmation) setMsg('¡Cuenta creada! Revisá tu email para confirmarla y después ingresá.');
       }
       if (modo === 'recuperar') {
         await resetPassword(email);
-        setMsg('Te enviamos un enlace para restablecer la contraseña.');
+        setMsg('Si el email existe, te enviamos un enlace para restablecer la contraseña.');
       }
     } catch (err) {
-      setError((err as Error).message);
+      const m = (err as Error).message;
+      setError(m === 'Invalid login credentials' ? 'Email o contraseña incorrectos.' : m);
     } finally {
       setBusy(false);
     }
   }
 
+  const titulos: Record<Modo, [string, string]> = {
+    login: ['Bienvenido de nuevo', 'Ingresá para ver tus obras.'],
+    registro: ['Creá tu cuenta', 'Tu espacio de trabajo privado en un minuto.'],
+    recuperar: ['Recuperar contraseña', 'Te enviamos un enlace a tu email.'],
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <form onSubmit={onSubmit} className="w-full max-w-sm space-y-4 rounded-xl border border-slate-700 bg-slate-900 p-6">
-        <h1 className="text-xl font-bold text-amber-400">
-          {modo === 'login' ? 'Ingresar' : modo === 'registro' ? 'Crear cuenta' : 'Recuperar contraseña'}
-        </h1>
-
-        {modo === 'registro' && (
-          <>
-            <input className={input} placeholder="Tu nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
-            <input className={input} placeholder="Nombre del estudio" value={estudio} onChange={(e) => setEstudio(e.target.value)} required />
-          </>
-        )}
-
-        <input className={input} type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-
-        {modo !== 'recuperar' && (
-          <input className={input} type="password" placeholder="Contraseña" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} required />
-        )}
-
-        {error && <p className="text-sm text-red-400">{error}</p>}
-        {msg && <p className="text-sm text-emerald-400">{msg}</p>}
-
-        <button disabled={busy} className="w-full rounded-md bg-amber-400 py-2 font-semibold text-slate-950 disabled:opacity-50">
-          {busy ? 'Procesando…' : modo === 'login' ? 'Entrar' : modo === 'registro' ? 'Registrarme' : 'Enviar enlace'}
-        </button>
-
-        <div className="flex justify-between text-sm text-slate-400">
-          <button type="button" onClick={() => setModo(modo === 'registro' ? 'login' : 'registro')} className="hover:text-white">
-            {modo === 'registro' ? 'Ya tengo cuenta' : 'Crear cuenta'}
-          </button>
-          <button type="button" onClick={() => setModo(modo === 'recuperar' ? 'login' : 'recuperar')} className="hover:text-white">
-            {modo === 'recuperar' ? 'Volver' : '¿Olvidaste la contraseña?'}
-          </button>
+    <div className="grid min-h-screen lg:grid-cols-2">
+      <div className="flex flex-col px-6 py-8 sm:px-12">
+        <div className="flex items-center justify-between">
+          <Link to="/"><Logo /></Link>
+          <Link to="/" className="inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-ink"><ArrowLeft size={16} /> Volver</Link>
         </div>
-      </form>
+        <div className="flex flex-1 items-center justify-center py-10">
+          <div className="w-full max-w-sm">
+            <AnimatePresence mode="wait">
+              <motion.div key={modo} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
+                <h1 className="text-3xl font-extrabold tracking-tight">{titulos[modo][0]}</h1>
+                <p className="mb-8 mt-2 text-muted">{titulos[modo][1]}</p>
+
+                {modo !== 'recuperar' && (
+                  <div className="mb-6 grid grid-cols-2 rounded-xl border border-line bg-white p-1 shadow-soft">
+                    {(['login', 'registro'] as const).map((m) => (
+                      <button key={m} type="button" onClick={() => cambiar(m)} className={`relative rounded-lg py-2 text-sm font-semibold ${modo === m ? 'text-ink' : 'text-muted'}`}>
+                        {modo === m && <motion.span layoutId="auth-tab" className="absolute inset-0 rounded-lg bg-slate-100" />}
+                        <span className="relative">{m === 'login' ? 'Login' : 'Register'}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <form onSubmit={onSubmit} className="space-y-3">
+                  {modo === 'registro' && (
+                    <>
+                      <Input icon={User} placeholder="Tu nombre" autoComplete="name" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
+                      <Input icon={Building2} placeholder="Estudio / empresa (opcional)" value={estudio} onChange={(e) => setEstudio(e.target.value)} />
+                    </>
+                  )}
+                  <Input icon={Mail} type="email" placeholder="Email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  {modo !== 'recuperar' && (
+                    <Input icon={Lock} type="password" placeholder="Contraseña (mín. 6 caracteres)" autoComplete={modo === 'login' ? 'current-password' : 'new-password'}
+                      minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} required />
+                  )}
+
+                  {error && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-peach-bg px-3 py-2 text-sm font-medium text-peach">{error}</motion.p>}
+                  {msg && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-sage-bg px-3 py-2 text-sm font-medium text-sage">{msg}</motion.p>}
+
+                  <Button type="submit" disabled={busy} className="w-full py-3">
+                    {busy ? 'Procesando…' : modo === 'login' ? 'Ingresar' : modo === 'registro' ? 'Crear cuenta' : 'Enviar enlace'}
+                  </Button>
+                </form>
+
+                <div className="mt-5 text-center text-sm">
+                  {modo === 'login' && <button type="button" onClick={() => cambiar('recuperar')} className="font-medium text-muted hover:text-ink">¿Olvidaste tu contraseña?</button>}
+                  {modo === 'recuperar' && <button type="button" onClick={() => cambiar('login')} className="font-medium text-muted hover:text-ink">Volver al login</button>}
+                </div>
+                {!hasSupabase && (
+                  <p className="mt-6 rounded-xl border border-dashed border-line p-3 text-center text-xs text-muted">
+                    Modo demo: Supabase no está configurado. Cualquier email/contraseña entra con datos de ejemplo guardados en este navegador.
+                  </p>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+
+      <div className="relative hidden overflow-hidden bg-ink lg:block">
+        <div className="absolute -left-20 top-20 h-80 w-80 rounded-full bg-lilac/40 blur-3xl" />
+        <div className="absolute bottom-10 right-0 h-80 w-80 rounded-full bg-sky/40 blur-3xl" />
+        <div className="relative flex h-full flex-col justify-center px-16 text-white">
+          <p className="max-w-md text-3xl font-bold leading-tight">“Ahora sé qué se pidió, qué se gastó y qué falta, sin llamar a nadie.”</p>
+          <p className="mt-4 text-slate-400">Así trabaja un jefe de obra con orden.</p>
+          <div className="mt-12 space-y-3">
+            {[
+              { icon: KanbanSquare, t: 'Tareas al día', c: 'bg-sky-bg text-sky' },
+              { icon: PackageCheck, t: 'Pedidos con trazabilidad', c: 'bg-peach-bg text-peach' },
+              { icon: Wallet, t: 'Caja chica que cierra', c: 'bg-sage-bg text-sage' },
+            ].map((x, i) => (
+              <motion.div key={x.t} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 + i * 0.12 }}
+                className="flex w-fit items-center gap-3 rounded-2xl bg-white/10 px-4 py-3 backdrop-blur">
+                <span className={`grid h-9 w-9 place-items-center rounded-xl ${x.c}`}><x.icon size={18} /></span>
+                <span className="font-semibold">{x.t}</span>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
