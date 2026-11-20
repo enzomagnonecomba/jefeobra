@@ -7,7 +7,7 @@ interface AuthCtx {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, nombre: string, estudio: string) => Promise<void>;
+  signUp: (email: string, password: string, nombre: string, estudio: string) => Promise<{ needsConfirmation: boolean }>;
   resetPassword: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -22,7 +22,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!hasSupabase) {
-      setUser(localStorage.getItem('mock_login') ? MOCK_USER : null);
+      let logged = false;
+      try { logged = Boolean(localStorage.getItem('mock_login')); } catch { /* noop */ }
+      setUser(logged ? MOCK_USER : null);
       setLoading(false);
       return;
     }
@@ -39,19 +41,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    if (!hasSupabase) { localStorage.setItem('mock_login', '1'); setUser(MOCK_USER); return; }
+    if (!hasSupabase) { try { localStorage.setItem('mock_login', '1'); } catch { /* noop */ } setUser(MOCK_USER); return; }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
   };
 
   const signUp = async (email: string, password: string, nombre: string, estudio: string) => {
-    if (!hasSupabase) { await signIn(email, password); return; }
-    const { error } = await supabase.auth.signUp({
+    if (!hasSupabase) { await signIn(email, password); return { needsConfirmation: false }; }
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { nombre, estudio } },
+      options: { data: { nombre, estudio }, emailRedirectTo: `${window.location.origin}/app` },
     });
     if (error) throw error;
+    return { needsConfirmation: !data.session };
   };
 
   const resetPassword = async (email: string) => {
@@ -63,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    if (!hasSupabase) { localStorage.removeItem('mock_login'); setUser(null); return; }
+    if (!hasSupabase) { try { localStorage.removeItem('mock_login'); } catch { /* noop */ } setUser(null); return; }
     await supabase.auth.signOut();
   };
 
