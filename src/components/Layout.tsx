@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   KanbanSquare, PackagePlus, ClipboardList, Calculator, Wallet, HardHat, FilePlus2, FolderInput, NotebookPen,
   LayoutDashboard, Truck, Container, ShieldCheck, Shirt, Wrench, Building2, LogOut, PanelLeftClose, PanelLeftOpen,
-  Menu, X, ChevronDown, type LucideIcon,
+  Menu, X, ChevronDown, Gem, type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useObra } from '../context/ObraContext';
@@ -12,6 +12,8 @@ import { hasSupabase } from '../lib/supabase';
 import { Logo } from './Logo';
 import { Button, Card, Field } from './ui';
 import { useToast } from './Toast';
+import { ThemeToggle } from './ThemeToggle';
+import { diasDePrueba } from '../lib/planes';
 
 interface NavItem { to: string; label: string; icon: LucideIcon }
 export const NAV: { title: string; items: NavItem[] }[] = [
@@ -124,6 +126,7 @@ export default function Layout() {
   useEffect(() => setMobileOpen(false), [location.pathname]);
 
   const needsObra = !loading && obras.length === 0 && location.pathname !== '/app/obras';
+  const trial = diasDePrueba(user?.created_at);
   const initial = (user?.user_metadata?.nombre as string | undefined)?.[0] ?? user?.email?.[0] ?? '?';
 
   return (
@@ -136,6 +139,9 @@ export default function Layout() {
         </div>
         <Sidebar collapsed={collapsed} />
         <div className="border-t border-line p-3">
+          <NavLink to="/app/planes" title="Planes" className={({ isActive }) => `mb-1 flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium ${collapsed ? 'justify-center' : ''} ${isActive ? 'bg-white text-ink shadow-soft' : 'text-slate-500 hover:bg-slate-100/70'}`}>
+            <Gem size={18} />{!collapsed && 'Planes'}
+          </NavLink>
           <NavLink to="/app/obras" title="Mis obras" className={({ isActive }) => `mb-1 flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium ${collapsed ? 'justify-center' : ''} ${isActive ? 'bg-white text-ink shadow-soft' : 'text-slate-500 hover:bg-slate-100/70'}`}>
             <Building2 size={18} />{!collapsed && 'Mis obras'}
           </NavLink>
@@ -158,6 +164,7 @@ export default function Layout() {
               </div>
               <Sidebar collapsed={false} onNavigate={() => setMobileOpen(false)} />
               <div className="border-t border-line p-3">
+                <NavLink to="/app/planes" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600"><Gem size={18} /> Planes</NavLink>
                 <NavLink to="/app/obras" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600"><Building2 size={18} /> Mis obras</NavLink>
               </div>
             </motion.aside>
@@ -171,6 +178,10 @@ export default function Layout() {
           {obras.length > 0 && <ObraSelector />}
           <div className="flex-1" />
           {!hasSupabase && <span className="hidden rounded-full bg-peach-bg px-3 py-1 text-xs font-semibold text-peach sm:inline">Modo demo · datos locales</span>}
+          <Link to="/app/planes" className="hidden items-center gap-1.5 rounded-full bg-lilac-bg px-3 py-1 text-xs font-semibold text-lilac transition hover:brightness-95 md:inline-flex">
+            <Gem size={13} /> {trial > 0 ? `Prueba gratis · ${trial} ${trial === 1 ? 'día' : 'días'}` : 'Prueba finalizada'}
+          </Link>
+          <ThemeToggle />
           <div className="flex items-center gap-2">
             <div className="grid h-9 w-9 place-items-center rounded-full bg-lilac-bg text-sm font-bold uppercase text-lilac" title={user?.email ?? ''}>{initial}</div>
             <button onClick={signOut} title="Cerrar sesión" aria-label="Cerrar sesión" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-ink"><LogOut size={18} /></button>

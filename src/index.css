@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* La variante dark: depende de la clase .dark en <html> (no del sistema). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 
@@ -18,9 +21,46 @@
   --shadow-lift: 0 2px 4px rgb(15 23 42 / 0.05), 0 12px 32px -8px rgb(15 23 42 / 0.12);
 }
 
+/*
+ * MODO OSCURO
+ * Toda la UI usa tokens (bone, ink, line, pasteles) y la escala slate/white de
+ * Tailwind, que en v4 son variables CSS. Redefinirlas bajo .dark tematiza la app
+ * completa sin duplicar clases. La escala slate se invierte; slate-900 queda
+ * oscuro porque se usa para overlays.
+ */
+:root.dark {
+  color-scheme: dark;
+
+  --color-bone: #0F1216;
+  --color-white: #171B22;
+  --color-line: #262D38;
+  --color-ink: #E6E8EC;
+  --color-muted: #8E99AA;
+
+  --color-slate-50: #1B2029;
+  --color-slate-100: #212733;
+  --color-slate-200: #2B3341;
+  --color-slate-300: #3A4352;
+  --color-slate-400: #6B7687;
+  --color-slate-500: #98A3B4;
+  --color-slate-600: #B4BDCA;
+  --color-slate-700: #CDD3DC;
+  --color-slate-900: #05070A;
+
+  --color-sage-bg: #12302A;   --color-sage: #7EE2B8;
+  --color-lilac-bg: #2A2347;  --color-lilac: #C9B8FF;
+  --color-peach-bg: #3A2617;  --color-peach: #FDBA7A;
+  --color-sky-bg: #102B3D;    --color-sky: #86D2FA;
+  --color-rose-bg: #3A1A2C;   --color-rose: #F5A9CF;
+
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 16px -4px rgb(0 0 0 / 0.35);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.35), 0 12px 32px -8px rgb(0 0 0 / 0.55);
+}
+
 html { scroll-behavior: smooth; }
 body {
   @apply bg-bone text-ink antialiased font-sans;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 /* Inputs consistentes en toda la app (en capa components para que las utilidades puedan sobrescribir) */
@@ -33,6 +73,9 @@ body {
 .label { @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted; }
 }
 
+/* Íconos nativos de inputs (calendario) visibles en oscuro */
+.dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.85); }
+
 /* Scrollbar discreta */
 .thin-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
-.thin-scroll::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 99px; }
+.thin-scroll::-webkit-scrollbar-thumb { background: var(--color-line); border-radius: 99px; }

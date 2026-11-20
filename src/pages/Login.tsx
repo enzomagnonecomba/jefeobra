@@ -6,6 +6,8 @@ import { useAuth } from '../context/AuthContext';
 import { hasSupabase } from '../lib/supabase';
 import { Logo } from '../components/Logo';
 import { Button } from '../components/ui';
+import { ThemeToggle } from '../components/ThemeToggle';
+import { PLANES, TRIAL_DAYS } from '../lib/planes';
 
 type Modo = 'login' | 'registro' | 'recuperar';
 
@@ -23,6 +25,7 @@ export default function Login() {
   const location = useLocation();
   const navigate = useNavigate();
   const [modo, setModo] = useState<Modo>(location.pathname === '/registro' ? 'registro' : 'login');
+  const plan = PLANES.find((p) => p.id === new URLSearchParams(location.search).get('plan')) ?? PLANES[1];
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [nombre, setNombre] = useState('');
@@ -44,7 +47,7 @@ export default function Login() {
     try {
       if (modo === 'login') await signIn(email, password);
       if (modo === 'registro') {
-        const { needsConfirmation } = await signUp(email, password, nombre, estudio);
+        const { needsConfirmation } = await signUp(email, password, nombre, estudio, plan.id);
         if (needsConfirmation) setMsg('¡Cuenta creada! Revisá tu email para confirmarla y después ingresá.');
       }
       if (modo === 'recuperar') {
@@ -96,7 +99,10 @@ export default function Login() {
       <div className="flex flex-col px-6 py-8 sm:px-12">
         <div className="flex items-center justify-between">
           <Link to="/"><Logo /></Link>
-          <Link to="/" className="inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-ink"><ArrowLeft size={16} /> Volver</Link>
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <Link to="/" className="inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-ink"><ArrowLeft size={16} /> Volver</Link>
+          </div>
         </div>
         <div className="flex flex-1 items-center justify-center py-10">
           <div className="w-full max-w-sm">
@@ -104,6 +110,11 @@ export default function Login() {
               <motion.div key={modo} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
                 <h1 className="text-3xl font-extrabold tracking-tight">{titulos[modo][0]}</h1>
                 <p className="mb-8 mt-2 text-muted">{titulos[modo][1]}</p>
+                {modo === 'registro' && (
+                  <p className="-mt-4 mb-6 inline-flex items-center gap-1.5 rounded-full bg-lilac-bg px-3 py-1 text-xs font-semibold text-lilac">
+                    Plan {plan.nombre} · {TRIAL_DAYS} días gratis, sin tarjeta
+                  </p>
+                )}
 
                 {modo !== 'recuperar' && (
                   <div className="mb-6 grid grid-cols-2 rounded-xl border border-line bg-white p-1 shadow-soft">
