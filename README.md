@@ -50,6 +50,20 @@ src/
 
 Para agregar un módulo tabular nuevo: crear la tabla en `schema.sql` (agregarla a los arrays del bloque de RLS), sumarla a `TableName`, escribir un `CrudConfig` en `modules.tsx` y registrarlo en `CrudPage.tsx` + `NAV` del Layout.
 
+## Idiomas (ES / EN / PT)
+
+La app usa un i18n propio sin dependencias ([src/i18n](src/i18n)). El **español es el idioma fuente**: el texto en español es la clave.
+
+```tsx
+import { t } from '../i18n';
+t('Nueva tarea');                         // → "New task" / "Nova tarefa"
+t('Te quedan {n} días de prueba gratuita', { n: 3 });
+```
+
+- Para un texto nuevo: envolvelo en `t(...)` y agregá la traducción en `src/i18n/en.ts` y `src/i18n/pt.ts`. Si falta, se muestra en español.
+- El idioma se detecta del navegador la primera vez y se guarda al cambiarlo con el selector (ES/EN/PT) del encabezado.
+- Los datos que carga cada usuario (nombres de obras, conceptos, etc.) no se traducen.
+
 ## Deploy en Vercel
 
 Importá el repo y cargá las variables de entorno. `vercel.json` resuelve el routing SPA. En Supabase → Auth → URL Configuration agregá tu dominio a las Redirect URLs (`/app` y `/reset-password`).

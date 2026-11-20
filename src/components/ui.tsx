@@ -1,6 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { AnimatePresence, motion, type HTMLMotionProps } from 'framer-motion';
 import { X, type LucideIcon } from 'lucide-react';
+import { t } from '../i18n';
 
 // ---------- Tonos pastel ----------
 export type Tone = 'sage' | 'lilac' | 'peach' | 'sky' | 'rose' | 'slate';
@@ -149,7 +150,7 @@ export function Modal({ open, onClose, title, children, wide }: {
           >
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-lg font-bold">{title}</h2>
-              <IconButton icon={X} label="Cerrar" onClick={onClose} />
+              <IconButton icon={X} label={t("Cerrar")} onClick={onClose} />
             </div>
             {children}
           </motion.div>
@@ -190,4 +191,9 @@ export function Segmented<T extends string>({ value, options, onChange }: {
 }
 
 export const PRIORIDAD_TONE = { critica: 'rose', alta: 'peach', media: 'sky', baja: 'slate' } as const;
-export const PRIORIDAD_LABEL = { critica: 'Crítica', alta: 'Alta', media: 'Media', baja: 'Baja' } as const;
+export const PRIORIDAD_LABEL = {
+  get critica() { return t('Crítica'); },
+  get alta() { return t('Alta'); },
+  get media() { return t('Media'); },
+  get baja() { return t('Baja'); },
+};

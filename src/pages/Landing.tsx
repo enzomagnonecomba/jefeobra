@@ -7,8 +7,10 @@ import { Logo } from '../components/Logo';
 import { useAuth } from '../context/AuthContext';
 import { TONE, type Tone } from '../components/ui';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { LangSwitcher } from '../components/LangSwitcher';
 import { Pricing } from '../components/Pricing';
 import { TRIAL_DAYS } from '../lib/planes';
+import { t } from '../i18n';
 
 const fadeUp: Variants = { hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } } };
 const stagger: Variants = { show: { transition: { staggerChildren: 0.08 } } };
@@ -34,16 +36,16 @@ function Mock() {
       <div className="rounded-2xl bg-bone p-4 sm:p-6">
         <div className="mb-4 flex items-center gap-2">
           <span className="h-3 w-3 rounded-full bg-rose-bg" /><span className="h-3 w-3 rounded-full bg-peach-bg" /><span className="h-3 w-3 rounded-full bg-sage-bg" />
-          <span className="ml-3 rounded-lg bg-white px-3 py-1 text-xs font-semibold text-muted shadow-soft">Edificio Río 1820</span>
+          <span className="ml-3 rounded-lg bg-white px-3 py-1 text-xs font-semibold text-muted shadow-soft">{t("Edificio Río 1820")}</span>
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
           {cols.map((c, i) => (
             <div key={c.t} className="rounded-2xl bg-slate-100/70 p-3">
-              <p className="mb-2 flex items-center gap-2 text-xs font-bold"><span className={`rounded-full px-2 py-0.5 ${TONE[c.tone]}`}>{c.cards.length}</span>{c.t}</p>
+              <p className="mb-2 flex items-center gap-2 text-xs font-bold"><span className={`rounded-full px-2 py-0.5 ${TONE[c.tone]}`}>{c.cards.length}</span>{t(c.t)}</p>
               {c.cards.map((card, j) => (
                 <motion.div key={card} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.8 + i * 0.15 + j * 0.1 }}
                   className="mb-2 rounded-xl border border-line bg-white p-3 text-left text-sm font-semibold shadow-soft">
-                  {card}
+                  {t(card)}
                   <div className="mt-2 flex gap-1"><span className="h-1.5 w-10 rounded-full bg-lilac-bg" /><span className="h-1.5 w-6 rounded-full bg-sky-bg" /></div>
                 </motion.div>
               ))}
@@ -53,12 +55,12 @@ function Mock() {
       </div>
       <motion.div animate={{ y: [0, -8, 0] }} transition={{ repeat: Infinity, duration: 5, ease: 'easeInOut' }}
         className="absolute -right-3 -top-5 hidden rounded-2xl border border-line bg-white px-4 py-3 shadow-lift sm:block">
-        <p className="text-xs text-muted">Saldo caja chica</p><p className="text-lg font-bold text-sage">$ 99.500</p>
+        <p className="text-xs text-muted">{t("Saldo caja chica")}</p><p className="text-lg font-bold text-sage">$ 99.500</p>
       </motion.div>
       <motion.div animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
         className="absolute -bottom-5 -left-3 hidden items-center gap-2 rounded-2xl border border-line bg-white px-4 py-3 shadow-lift sm:flex">
         <span className="grid h-8 w-8 place-items-center rounded-lg bg-peach-bg text-peach"><PackageCheck size={16} /></span>
-        <span className="text-sm font-semibold">Pedido #14 en camino</span>
+        <span className="text-sm font-semibold">{t("Pedido #14 en camino")}</span>
       </motion.div>
     </motion.div>
   );
@@ -73,18 +75,19 @@ export default function Landing() {
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link to="/"><Logo /></Link>
           <nav className="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
-            <a href="#que-hacemos" className="hover:text-ink">Qué hacemos</a>
-            <a href="#quienes-somos" className="hover:text-ink">Quiénes somos</a>
-            <a href="#planes" className="hover:text-ink">Planes</a>
+            <a href="#que-hacemos" className="hover:text-ink">{t("Qué hacemos")}</a>
+            <a href="#quienes-somos" className="hover:text-ink">{t("Quiénes somos")}</a>
+            <a href="#planes" className="hover:text-ink">{t("Planes")}</a>
           </nav>
           <div className="flex items-center gap-2">
+            <LangSwitcher />
             <ThemeToggle />
             {user ? (
-              <Link to="/app" className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white shadow-soft hover:bg-slate-700">Ir al panel <ArrowRight size={16} /></Link>
+              <Link to="/app" className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white shadow-soft hover:bg-slate-700">{t("Ir al panel")} <ArrowRight size={16} /></Link>
             ) : (
               <>
-                <Link to="/login" className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">Login</Link>
-                <Link to="/registro" className="rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-slate-700">Register</Link>
+                <Link to="/login" className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">{t("Login")}</Link>
+                <Link to="/registro" className="rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-slate-700">{t("Register")}</Link>
               </>
             )}
           </div>
@@ -101,19 +104,19 @@ export default function Landing() {
         </div>
         <motion.div variants={stagger} initial="hidden" animate="show" className="mx-auto max-w-3xl text-center">
           <motion.span variants={fadeUp} className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-soft">
-            <Sparkles size={14} className="text-lilac" /> Hecho para jefes de obra y estudios de arquitectura
+            <Sparkles size={14} className="text-lilac" /> {t("Hecho para jefes de obra y estudios de arquitectura")}
           </motion.span>
           <motion.h1 variants={fadeUp} className="mt-6 text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl">
-            Orden, trazabilidad y <span className="bg-gradient-to-r from-lilac via-sky to-sage bg-clip-text text-transparent">calma</span> para el caos diario de la obra.
+            {t("Orden, trazabilidad y")} <span className="bg-gradient-to-r from-lilac via-sky to-sage bg-clip-text text-transparent">{t("calma")}</span> {t("para el caos diario de la obra.")}
           </motion.h1>
           <motion.p variants={fadeUp} className="mx-auto mt-6 max-w-xl text-lg text-slate-600">
-            Tareas, pedidos, caja chica, jornales, fletes y seguros en un solo lugar. Dejá el cuaderno, los audios y las planillas sueltas.
+            {t("Tareas, pedidos, caja chica, jornales, fletes y seguros en un solo lugar. Dejá el cuaderno, los audios y las planillas sueltas.")}
           </motion.p>
           <motion.div variants={fadeUp} className="mt-8 flex flex-wrap justify-center gap-3">
             <Link to={user ? '/app' : '/registro'} className="group inline-flex items-center gap-2 rounded-2xl bg-ink px-6 py-3.5 font-semibold text-white shadow-lift transition hover:-translate-y-0.5">
-              Probar {TRIAL_DAYS} días gratis <ArrowRight size={18} className="transition group-hover:translate-x-1" />
+              {t("Probar {n} días gratis", { n: TRIAL_DAYS })} <ArrowRight size={18} className="transition group-hover:translate-x-1" />
             </Link>
-            <a href="#que-hacemos" className="inline-flex items-center gap-2 rounded-2xl border border-line bg-white px-6 py-3.5 font-semibold shadow-soft hover:border-slate-300">Ver cómo funciona</a>
+            <a href="#que-hacemos" className="inline-flex items-center gap-2 rounded-2xl border border-line bg-white px-6 py-3.5 font-semibold shadow-soft hover:border-slate-300">{t("Ver cómo funciona")}</a>
           </motion.div>
         </motion.div>
         <Mock />
@@ -123,17 +126,17 @@ export default function Landing() {
       <section id="que-hacemos" className="scroll-mt-20 px-4 py-24 sm:px-6">
         <div className="mx-auto max-w-6xl">
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }} variants={stagger} className="mb-14 max-w-2xl">
-            <motion.p variants={fadeUp} className="text-sm font-bold uppercase tracking-[0.15em] text-lilac">Qué hacemos</motion.p>
-            <motion.h2 variants={fadeUp} className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">Todo lo que pasa en la obra, en un mismo tablero.</motion.h2>
-            <motion.p variants={fadeUp} className="mt-4 text-slate-600">Centralizamos la operativa del jefe de obra para que el estudio sepa qué se pidió, qué se gastó y qué falta, sin llamar a nadie.</motion.p>
+            <motion.p variants={fadeUp} className="text-sm font-bold uppercase tracking-[0.15em] text-lilac">{t("Qué hacemos")}</motion.p>
+            <motion.h2 variants={fadeUp} className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">{t("Todo lo que pasa en la obra, en un mismo tablero.")}</motion.h2>
+            <motion.p variants={fadeUp} className="mt-4 text-slate-600">{t("Centralizamos la operativa del jefe de obra para que el estudio sepa qué se pidió, qué se gastó y qué falta, sin llamar a nadie.")}</motion.p>
           </motion.div>
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: '-60px' }} variants={stagger} className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f) => (
               <motion.div key={f.title} variants={fadeUp} whileHover={{ y: -6 }} transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                 className="group rounded-3xl border border-line bg-white p-7 shadow-soft hover:shadow-lift">
                 <div className={`mb-5 grid h-12 w-12 place-items-center rounded-2xl ${TONE[f.tone]} transition group-hover:scale-110`}><f.icon size={22} /></div>
-                <h3 className="text-lg font-bold">{f.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">{f.text}</p>
+                <h3 className="text-lg font-bold">{t(f.title)}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">{t(f.text)}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -144,14 +147,14 @@ export default function Landing() {
       <section id="quienes-somos" className="scroll-mt-20 bg-white px-4 py-24 sm:px-6">
         <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-2">
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={stagger}>
-            <motion.p variants={fadeUp} className="text-sm font-bold uppercase tracking-[0.15em] text-sage">Quiénes somos</motion.p>
-            <motion.h2 variants={fadeUp} className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">Arquitectos, jefes de obra y desarrolladores, en la misma mesa.</motion.h2>
+            <motion.p variants={fadeUp} className="text-sm font-bold uppercase tracking-[0.15em] text-sage">{t("Quiénes somos")}</motion.p>
+            <motion.h2 variants={fadeUp} className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">{t("Arquitectos, jefes de obra y desarrolladores, en la misma mesa.")}</motion.h2>
             <motion.p variants={fadeUp} className="mt-5 leading-relaxed text-slate-600">
-              Venimos del estudio y del pie de obra. Conocemos el remito que se pierde, la caja chica que no cierra y el volquete que nadie pidió retirar. Construimos la herramienta que nos hubiera gustado tener.
+              {t("Venimos del estudio y del pie de obra. Conocemos el remito que se pierde, la caja chica que no cierra y el volquete que nadie pidió retirar. Construimos la herramienta que nos hubiera gustado tener.")}
             </motion.p>
             <motion.ul variants={stagger} className="mt-6 space-y-3">
-              {['Pensado para usar desde el celular, en la obra.', 'Sin capacitaciones eternas: se entiende en minutos.', 'Seguridad real: aislamiento de datos a nivel base de datos.'].map((t) => (
-                <motion.li key={t} variants={fadeUp} className="flex items-start gap-3 text-slate-700"><CheckCircle2 size={20} className="mt-0.5 shrink-0 text-sage" />{t}</motion.li>
+              {['Pensado para usar desde el celular, en la obra.', 'Sin capacitaciones eternas: se entiende en minutos.', 'Seguridad real: aislamiento de datos a nivel base de datos.'].map((it) => (
+                <motion.li key={it} variants={fadeUp} className="flex items-start gap-3 text-slate-700"><CheckCircle2 size={20} className="mt-0.5 shrink-0 text-sage" />{t(it)}</motion.li>
               ))}
             </motion.ul>
           </motion.div>
@@ -164,8 +167,8 @@ export default function Landing() {
             ].map((c, i) => (
               <motion.div key={c.n} variants={fadeUp} className={`rounded-3xl border border-line bg-bone p-6 ${i % 2 ? 'translate-y-8' : ''}`}>
                 <div className={`mb-4 grid h-11 w-11 place-items-center rounded-2xl ${TONE[c.tone]}`}><c.icon size={20} /></div>
-                <p className="font-bold">{c.n}</p>
-                <p className="mt-1 text-sm text-slate-600">{c.t}</p>
+                <p className="font-bold">{t(c.n)}</p>
+                <p className="mt-1 text-sm text-slate-600">{t(c.t)}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -176,9 +179,9 @@ export default function Landing() {
       <section id="planes" className="scroll-mt-20 px-4 py-24 sm:px-6">
         <div className="mx-auto max-w-6xl">
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={stagger} className="mx-auto mb-10 max-w-2xl text-center">
-            <motion.p variants={fadeUp} className="text-sm font-bold uppercase tracking-[0.15em] text-sky">Planes</motion.p>
-            <motion.h2 variants={fadeUp} className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">Empezá gratis. Elegí cuando estés listo.</motion.h2>
-            <motion.p variants={fadeUp} className="mt-4 text-slate-600">Todos los planes incluyen {TRIAL_DAYS} días de prueba sin tarjeta de crédito.</motion.p>
+            <motion.p variants={fadeUp} className="text-sm font-bold uppercase tracking-[0.15em] text-sky">{t("Planes")}</motion.p>
+            <motion.h2 variants={fadeUp} className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">{t("Empezá gratis. Elegí cuando estés listo.")}</motion.h2>
+            <motion.p variants={fadeUp} className="mt-4 text-slate-600">{t("Todos los planes incluyen {n} días de prueba sin tarjeta de crédito.", { n: TRIAL_DAYS })}</motion.p>
           </motion.div>
           <Pricing />
         </div>
@@ -188,16 +191,16 @@ export default function Landing() {
       <section className="px-4 py-24 sm:px-6">
         <motion.div initial={{ opacity: 0, scale: 0.97 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
           className="mx-auto max-w-4xl rounded-[2rem] bg-ink px-8 py-14 text-center text-white shadow-lift">
-          <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Tu próxima obra, bajo control desde el día uno.</h2>
-          <p className="mx-auto mt-4 max-w-lg text-slate-300">Creá tu cuenta en un minuto. Tu espacio es privado y aislado.</p>
+          <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">{t("Tu próxima obra, bajo control desde el día uno.")}</h2>
+          <p className="mx-auto mt-4 max-w-lg text-slate-300">{t("Creá tu cuenta en un minuto. Tu espacio es privado y aislado.")}</p>
           <Link to={user ? '/app' : '/registro'} className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-sage-bg px-6 py-3.5 font-semibold text-sage transition hover:-translate-y-0.5">
-            Crear mi cuenta <ArrowRight size={18} />
+            {t("Crear mi cuenta")} <ArrowRight size={18} />
           </Link>
         </motion.div>
       </section>
 
       <footer className="border-t border-line px-4 py-8 text-center text-sm text-muted">
-        <Logo /> <p className="mt-2">© {new Date().getFullYear()} obrabase · Gestión y control de obra</p>
+        <Logo /> <p className="mt-2">© {new Date().getFullYear()} obrabase · {t("Gestión y control de obra")}</p>
       </footer>
     </div>
   );

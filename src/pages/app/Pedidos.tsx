@@ -11,12 +11,13 @@ import {
   Badge, Button, Card, EmptyState, Field, IconButton, Modal, PageHeader, PRIORIDAD_LABEL, PRIORIDAD_TONE, Segmented, TONE, fmtDate, type Tone,
 } from '../../components/ui';
 import { PEDIDO_ESTADOS, PRIORIDADES, type Pedido, type PedidoEstado, type PedidoItem, type Prioridad } from '../../types';
+import { t } from '../../i18n';
 
 export const ESTADO_PEDIDO: Record<PedidoEstado, { label: string; tone: Tone }> = {
-  pendiente: { label: 'Pendiente', tone: 'peach' },
-  aprobado: { label: 'Aprobado', tone: 'sage' },
-  en_camino: { label: 'En camino', tone: 'sky' },
-  entregado: { label: 'Entregado', tone: 'lilac' },
+  pendiente: { get label() { return t('Pendiente'); }, tone: 'peach' },
+  aprobado: { get label() { return t('Aprobado'); }, tone: 'sage' },
+  en_camino: { get label() { return t('En camino'); }, tone: 'sky' },
+  entregado: { get label() { return t('Entregado'); }, tone: 'lilac' },
 };
 
 const UNIDADES = ['u', 'm', 'm²', 'm³', 'kg', 'tn', 'bolsa', 'barra', 'l', 'rollo', 'caja'];
@@ -43,14 +44,14 @@ export function NuevoPedido() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     const clean = items.filter((i) => i.descripcion.trim() && i.cantidad > 0);
-    if (!clean.length) return toast.error('Agregá al menos un ítem con descripción y cantidad');
+    if (!clean.length) return toast.error(t('Agregá al menos un ítem con descripción y cantidad'));
     setBusy(true);
     try {
       await create({
         titulo: titulo.trim(), proveedor: proveedor.trim() || null, prioridad, fecha_requerida: fecha || null,
         notas: notas.trim() || null, items: clean, estado: 'pendiente',
       });
-      toast.ok('Pedido enviado');
+      toast.ok(t('Pedido enviado'));
       navigate('/app/pedidos/mis-pedidos');
     } catch (err) {
       toast.error((err as Error).message);
@@ -59,20 +60,20 @@ export function NuevoPedido() {
 
   return (
     <div className="max-w-4xl">
-      <PageHeader title="Nuevo pedido" subtitle="Solicitá materiales e insumos para la obra" icon={PackagePlus} tone="peach" />
+      <PageHeader title={t("Nuevo pedido")} subtitle={t("Solicitá materiales e insumos para la obra")} icon={PackagePlus} tone="peach" />
       <form onSubmit={onSubmit} className="space-y-5">
         <Card className="grid gap-4 p-6 sm:grid-cols-2">
-          <Field label="Título del pedido *" className="sm:col-span-2">
-            <input className="field" required placeholder="Ej. Materiales mampostería PB" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+          <Field label={t("Título del pedido *")} className="sm:col-span-2">
+            <input className="field" required placeholder={t("Ej. Materiales mampostería PB")} value={titulo} onChange={(e) => setTitulo(e.target.value)} />
           </Field>
-          <Field label="Proveedor sugerido">
-            <input className="field" placeholder="Opcional" value={proveedor} onChange={(e) => setProveedor(e.target.value)} />
+          <Field label={t("Proveedor sugerido")}>
+            <input className="field" placeholder={t("Opcional")} value={proveedor} onChange={(e) => setProveedor(e.target.value)} />
           </Field>
-          <Field label="Fecha requerida">
+          <Field label={t("Fecha requerida")}>
             <input type="date" className="field" value={fecha} onChange={(e) => setFecha(e.target.value)} />
           </Field>
           <div className="sm:col-span-2">
-            <span className="label">Prioridad</span>
+            <span className="label">{t("Prioridad")}</span>
             <div className="flex flex-wrap gap-2">
               {PRIORIDADES.map((p) => (
                 <motion.button type="button" key={p} whileTap={{ scale: 0.95 }} onClick={() => setPrioridad(p)}
@@ -86,23 +87,23 @@ export function NuevoPedido() {
 
         <Card className="p-6">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-bold">Ítems <span className="font-medium text-muted">({items.length})</span></h2>
-            <Button type="button" variant="soft" icon={Plus} onClick={() => setItems([...items, emptyItem()])}>Agregar ítem</Button>
+            <h2 className="font-bold">{t("Ítems")} <span className="font-medium text-muted">({items.length})</span></h2>
+            <Button type="button" variant="soft" icon={Plus} onClick={() => setItems([...items, emptyItem()])}>{t("Agregar ítem")}</Button>
           </div>
           <div className="space-y-2">
             <div className="hidden grid-cols-[1fr_110px_110px_36px] gap-2 px-1 text-xs font-semibold uppercase tracking-wide text-muted sm:grid">
-              <span>Descripción</span><span>Cantidad</span><span>Unidad</span><span />
+              <span>{t("Descripción")}</span><span>{t("Cantidad")}</span><span>{t("Unidad")}</span><span />
             </div>
             <AnimatePresence initial={false}>
               {items.map((it, i) => (
                 <motion.div key={i} layout initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
                   className="grid grid-cols-[1fr_auto] gap-2 sm:grid-cols-[1fr_110px_110px_36px]">
-                  <input className="field col-span-2 sm:col-span-1" placeholder="Ej. Cemento portland" aria-label="Descripción" value={it.descripcion} onChange={(e) => setItem(i, { descripcion: e.target.value })} />
-                  <input className="field" type="number" min={0} step="any" aria-label="Cantidad" value={it.cantidad} onChange={(e) => setItem(i, { cantidad: Number(e.target.value) })} />
-                  <select className="field" aria-label="Unidad" value={it.unidad} onChange={(e) => setItem(i, { unidad: e.target.value })}>
-                    {UNIDADES.map((u) => <option key={u}>{u}</option>)}
+                  <input className="field col-span-2 sm:col-span-1" placeholder={t("Ej. Cemento portland")} aria-label={t("Descripción")} value={it.descripcion} onChange={(e) => setItem(i, { descripcion: e.target.value })} />
+                  <input className="field" type="number" min={0} step="any" aria-label={t("Cantidad")} value={it.cantidad} onChange={(e) => setItem(i, { cantidad: Number(e.target.value) })} />
+                  <select className="field" aria-label={t("Unidad")} value={it.unidad} onChange={(e) => setItem(i, { unidad: e.target.value })}>
+                    {UNIDADES.map((u) => <option key={u} value={u}>{t(u)}</option>)}
                   </select>
-                  <IconButton icon={Trash2} label="Quitar ítem" className="self-center" disabled={items.length === 1} onClick={() => setItems(items.filter((_, j) => j !== i))} />
+                  <IconButton icon={Trash2} label={t("Quitar ítem")} className="self-center" disabled={items.length === 1} onClick={() => setItems(items.filter((_, j) => j !== i))} />
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -110,14 +111,14 @@ export function NuevoPedido() {
         </Card>
 
         <Card className="p-6">
-          <Field label="Notas para compras">
-            <textarea className="field min-h-20" placeholder="Especificaciones, marcas, lugar de descarga…" value={notas} onChange={(e) => setNotas(e.target.value)} />
+          <Field label={t("Notas para compras")}>
+            <textarea className="field min-h-20" placeholder={t("Especificaciones, marcas, lugar de descarga…")} value={notas} onChange={(e) => setNotas(e.target.value)} />
           </Field>
         </Card>
 
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={() => navigate(-1)}>Cancelar</Button>
-          <Button type="submit" icon={Send} disabled={busy}>{busy ? 'Enviando…' : 'Enviar pedido'}</Button>
+          <Button type="button" variant="ghost" onClick={() => navigate(-1)}>{t("Cancelar")}</Button>
+          <Button type="submit" icon={Send} disabled={busy}>{busy ? t('Enviando…') : t('Enviar pedido')}</Button>
         </div>
       </form>
     </div>
@@ -139,21 +140,21 @@ export function MisPedidos() {
 
   return (
     <div>
-      <PageHeader title="Mis pedidos" subtitle="Historial y estado de tus solicitudes" icon={ClipboardList} tone="peach"
-        actions={<Button icon={Plus} onClick={() => navigate('/app/pedidos/nuevo')}>Nuevo pedido</Button>} />
+      <PageHeader title={t("Mis pedidos")} subtitle={t("Historial y estado de tus solicitudes")} icon={ClipboardList} tone="peach"
+        actions={<Button icon={Plus} onClick={() => navigate('/app/pedidos/nuevo')}>{t("Nuevo pedido")}</Button>} />
 
       <div className="mb-5 flex flex-wrap items-center gap-3">
         <Segmented value={filtro} onChange={setFiltro}
-          options={[{ value: 'todos', label: `Todos (${rows.length})` }, ...PEDIDO_ESTADOS.map((s) => ({ value: s, label: `${ESTADO_PEDIDO[s].label} (${rows.filter((r) => r.estado === s).length})` }))]} />
+          options={[{ value: 'todos', label: `${t('Todos')} (${rows.length})` }, ...PEDIDO_ESTADOS.map((s) => ({ value: s, label: `${ESTADO_PEDIDO[s].label} (${rows.filter((r) => r.estado === s).length})` }))]} />
         <div className="relative min-w-[200px] flex-1 sm:max-w-xs">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input className="field pl-9" placeholder="Buscar pedido o material…" value={q} onChange={(e) => setQ(e.target.value)} />
+          <input className="field pl-9" placeholder={t("Buscar pedido o material…")} value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
       </div>
 
-      {loading ? <Card className="p-10 text-center text-sm text-muted">Cargando…</Card> : rows.length === 0 ? (
-        <EmptyState icon={Package} title="Sin pedidos todavía" text="Cuando hagas tu primer pedido de materiales lo vas a ver acá con su estado."
-          action={<Button icon={Plus} onClick={() => navigate('/app/pedidos/nuevo')}>Nuevo pedido</Button>} />
+      {loading ? <Card className="p-10 text-center text-sm text-muted">{t("Cargando…")}</Card> : rows.length === 0 ? (
+        <EmptyState icon={Package} title={t("Sin pedidos todavía")} text={t("Cuando hagas tu primer pedido de materiales lo vas a ver acá con su estado.")}
+          action={<Button icon={Plus} onClick={() => navigate('/app/pedidos/nuevo')}>{t("Nuevo pedido")}</Button>} />
       ) : (
         <motion.div layout className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <AnimatePresence>
@@ -166,7 +167,7 @@ export function MisPedidos() {
                 </div>
                 <ul className="mb-4 space-y-1 text-sm text-muted">
                   {p.items.slice(0, 3).map((it, j) => <li key={j} className="flex justify-between gap-2"><span className="truncate">{it.descripcion}</span><span className="shrink-0 tabular-nums font-medium text-ink">{it.cantidad} {it.unidad}</span></li>)}
-                  {p.items.length > 3 && <li className="text-xs">+{p.items.length - 3} ítems más</li>}
+                  {p.items.length > 3 && <li className="text-xs">{t('+{n} ítems más', { n: p.items.length - 3 })}</li>}
                 </ul>
                 <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3 text-xs text-muted">
                   <Badge tone={PRIORIDAD_TONE[p.prioridad]}>{PRIORIDAD_LABEL[p.prioridad]}</Badge>
@@ -176,7 +177,7 @@ export function MisPedidos() {
               </Card>
             ))}
           </AnimatePresence>
-          {list.length === 0 && <p className="col-span-full py-10 text-center text-sm text-muted">Sin pedidos para este filtro.</p>}
+          {list.length === 0 && <p className="col-span-full py-10 text-center text-sm text-muted">{t("Sin pedidos para este filtro.")}</p>}
         </motion.div>
       )}
 
@@ -184,7 +185,7 @@ export function MisPedidos() {
         {detalle && (
           <div className="space-y-5">
             <div>
-              <span className="label">Estado</span>
+              <span className="label">{t("Estado")}</span>
               <div className="flex flex-wrap items-center gap-2">
                 {PEDIDO_ESTADOS.map((s, i) => (
                   <div key={s} className="flex items-center gap-2">
@@ -198,21 +199,21 @@ export function MisPedidos() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
-              <div><span className="label">Prioridad</span><Badge tone={PRIORIDAD_TONE[detalle.prioridad]}>{PRIORIDAD_LABEL[detalle.prioridad]}</Badge></div>
-              <div><span className="label">Requerido</span>{fmtDate(detalle.fecha_requerida)}</div>
-              <div><span className="label">Proveedor</span>{detalle.proveedor ?? '—'}</div>
-              <div><span className="label">Creado</span>{fmtDate(detalle.created_at)}</div>
+              <div><span className="label">{t("Prioridad")}</span><Badge tone={PRIORIDAD_TONE[detalle.prioridad]}>{PRIORIDAD_LABEL[detalle.prioridad]}</Badge></div>
+              <div><span className="label">{t("Requerido")}</span>{fmtDate(detalle.fecha_requerida)}</div>
+              <div><span className="label">{t("Proveedor")}</span>{detalle.proveedor ?? '—'}</div>
+              <div><span className="label">{t("Creado")}</span>{fmtDate(detalle.created_at)}</div>
             </div>
             <div className="overflow-hidden rounded-xl border border-line">
               <table className="w-full text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-muted"><tr><th className="px-4 py-2 text-left">Ítem</th><th className="px-4 py-2 text-right">Cantidad</th></tr></thead>
+                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-muted"><tr><th className="px-4 py-2 text-left">{t("Ítem")}</th><th className="px-4 py-2 text-right">{t("Cantidad")}</th></tr></thead>
                 <tbody>{detalle.items.map((it, i) => <tr key={i} className="border-t border-line"><td className="px-4 py-2">{it.descripcion}</td><td className="px-4 py-2 text-right tabular-nums">{it.cantidad} {it.unidad}</td></tr>)}</tbody>
               </table>
             </div>
-            {detalle.notas && <div><span className="label">Notas</span><p className="text-sm">{detalle.notas}</p></div>}
+            {detalle.notas && <div><span className="label">{t("Notas")}</span><p className="text-sm">{detalle.notas}</p></div>}
             <div className="flex justify-between">
-              <Button variant="danger" icon={Trash2} onClick={() => { void destroy(detalle.id); setDetalle(null); }}>Eliminar pedido</Button>
-              <Button variant="soft" onClick={() => navigate('/app/pedidos/nuevo', { state: { titulo: `${detalle.titulo} (copia)`, items: detalle.items } })}>Duplicar</Button>
+              <Button variant="danger" icon={Trash2} onClick={() => { void destroy(detalle.id); setDetalle(null); }}>{t("Eliminar pedido")}</Button>
+              <Button variant="soft" onClick={() => navigate('/app/pedidos/nuevo', { state: { titulo: `${detalle.titulo} (${t('copia')})`, items: detalle.items } })}>{t("Duplicar")}</Button>
             </div>
           </div>
         )}
@@ -224,10 +225,10 @@ export function MisPedidos() {
 // ==================================================================== CÁLCULOS
 type Calc = 'superficie' | 'hormigon' | 'ladrillos' | 'desperdicio';
 const LADRILLOS: Record<string, { label: string; porM2: number }> = {
-  comun: { label: 'Ladrillo común (5.5x12x25)', porM2: 60 },
-  hueco12: { label: 'Hueco 12x18x33', porM2: 16 },
-  hueco18: { label: 'Hueco 18x18x33', porM2: 16 },
-  bloque: { label: 'Bloque de hormigón 20x20x40', porM2: 12.5 },
+  comun: { get label() { return t('Ladrillo común (5.5x12x25)'); }, porM2: 60 },
+  hueco12: { get label() { return t('Hueco 12x18x33'); }, porM2: 16 },
+  hueco18: { get label() { return t('Hueco 18x18x33'); }, porM2: 16 },
+  bloque: { get label() { return t('Bloque de hormigón 20x20x40'); }, porM2: 12.5 },
 };
 
 export function Calculos() {
@@ -240,22 +241,22 @@ export function Calculos() {
   const res = useMemo(() => {
     const area = n('largo') * n('ancho');
     switch (tipo) {
-      case 'superficie': return { valor: area * factor, unidad: 'm²', detalle: `${area.toFixed(2)} m² + ${n('desperdicio')}% desperdicio`, item: 'Superficie de piso / revestimiento' };
+      case 'superficie': return { valor: area * factor, unidad: 'm²', detalle: t('{a} m² + {d}% desperdicio', { a: area.toFixed(2), d: n('desperdicio') }), item: t('Superficie de piso / revestimiento') };
       case 'hormigon': {
         const vol = area * n('espesor') * factor;
-        return { valor: vol, unidad: 'm³', detalle: `${area.toFixed(2)} m² × ${n('espesor')} m de espesor + ${n('desperdicio')}%`, item: 'Hormigón elaborado H-21',
-          extra: [{ k: 'Cemento (aprox. 7 bolsas/m³)', v: `${Math.ceil(vol * 7)} bolsas` }, { k: 'Arena', v: `${(vol * 0.65).toFixed(2)} m³` }, { k: 'Piedra', v: `${(vol * 0.85).toFixed(2)} m³` }] };
+        return { valor: vol, unidad: 'm³', detalle: t('{a} m² × {e} m de espesor + {d}%', { a: area.toFixed(2), e: n('espesor'), d: n('desperdicio') }), item: t('Hormigón elaborado H-21'),
+          extra: [{ k: t('Cemento (aprox. 7 bolsas/m³)'), v: t('{n} bolsas', { n: Math.ceil(vol * 7) }) }, { k: t('Arena'), v: `${(vol * 0.65).toFixed(2)} m³` }, { k: t('Piedra'), v: `${(vol * 0.85).toFixed(2)} m³` }] };
       }
       case 'ladrillos': {
         const l = LADRILLOS[v.ladrillo];
-        return { valor: Math.ceil(area * l.porM2 * factor), unidad: 'u', detalle: `${area.toFixed(2)} m² × ${l.porM2} u/m² + ${n('desperdicio')}%`, item: l.label };
+        return { valor: Math.ceil(area * l.porM2 * factor), unidad: 'u', detalle: t('{a} m² × {p} u/m² + {d}%', { a: area.toFixed(2), p: l.porM2, d: n('desperdicio') }), item: l.label };
       }
-      case 'desperdicio': return { valor: n('base') * factor, unidad: 'u', detalle: `${n('base')} + ${n('desperdicio')}% de desperdicio`, item: 'Material' };
+      case 'desperdicio': return { valor: n('base') * factor, unidad: 'u', detalle: t('{b} + {d}% de desperdicio', { b: n('base'), d: n('desperdicio') }), item: t('Material') };
     }
   }, [tipo, v]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const input = (k: keyof typeof v, label: string, suffix: string) => (
-    <Field label={label}>
+    <Field label={t(label)}>
       <div className="relative">
         <input className="field pr-12" type="number" min={0} step="any" value={v[k]} onChange={(e) => setV({ ...v, [k]: e.target.value })} />
         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted">{suffix}</span>
@@ -267,14 +268,14 @@ export function Calculos() {
 
   return (
     <div className="max-w-5xl">
-      <PageHeader title="Cálculos" subtitle="Calculadora rápida de obra" icon={Calculator} tone="lilac" />
+      <PageHeader title={t("Cálculos")} subtitle={t("Calculadora rápida de obra")} icon={Calculator} tone="lilac" />
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
         {([
           ['superficie', 'Superficie', Ruler], ['hormigon', 'Hormigón', Box], ['ladrillos', 'Ladrillos por m²', BrickWall], ['desperdicio', 'Desperdicio %', Percent],
         ] as const).map(([k, label, Icon]) => (
           <motion.button key={k} whileTap={{ scale: 0.97 }} onClick={() => setTipo(k)}
             className={`flex items-center gap-3 rounded-2xl border p-4 text-left text-sm font-semibold transition ${tipo === k ? 'border-lilac/30 bg-lilac-bg text-lilac shadow-soft' : 'border-line bg-white hover:border-slate-300'}`}>
-            <Icon size={18} /> {label}
+            <Icon size={18} /> {t(label)}
           </motion.button>
         ))}
       </div>
@@ -284,7 +285,7 @@ export function Calculos() {
           {tipo !== 'desperdicio' && <>{input('largo', 'Largo', 'm')}{input('ancho', tipo === 'ladrillos' ? 'Alto del muro' : 'Ancho', 'm')}</>}
           {tipo === 'hormigon' && input('espesor', 'Espesor', 'm')}
           {tipo === 'ladrillos' && (
-            <Field label="Tipo de ladrillo">
+            <Field label={t("Tipo de ladrillo")}>
               <select className="field" value={v.ladrillo} onChange={(e) => setV({ ...v, ladrillo: e.target.value })}>
                 {Object.entries(LADRILLOS).map(([k, l]) => <option key={k} value={k}>{l.label}</option>)}
               </select>
@@ -297,7 +298,7 @@ export function Calculos() {
         <AnimatePresence mode="wait">
           <motion.div key={tipo} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }}>
             <Card className="flex h-full flex-col bg-gradient-to-br from-white to-lilac-bg/40 p-6">
-              <span className="label">Resultado</span>
+              <span className="label">{t("Resultado")}</span>
               <motion.p key={valorRedondeado} initial={{ scale: 0.96, opacity: 0.6 }} animate={{ scale: 1, opacity: 1 }} className="text-4xl font-extrabold tracking-tight">
                 {valorRedondeado.toLocaleString('es-AR')} <span className="text-xl text-muted">{res.unidad}</span>
               </motion.p>
@@ -309,8 +310,8 @@ export function Calculos() {
               )}
               <div className="flex-1" />
               <Button className="mt-6" icon={Send}
-                onClick={() => navigate('/app/pedidos/nuevo', { state: { titulo: `Pedido desde cálculo: ${res.item}`, items: [{ descripcion: res.item, cantidad: valorRedondeado, unidad: res.unidad }] } })}>
-                Enviar a nuevo pedido
+                onClick={() => navigate('/app/pedidos/nuevo', { state: { titulo: t('Pedido desde cálculo: {x}', { x: res.item }), items: [{ descripcion: res.item, cantidad: valorRedondeado, unidad: res.unidad }] } })}>
+                {t("Enviar a nuevo pedido")}
               </Button>
             </Card>
           </motion.div>

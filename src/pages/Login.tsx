@@ -7,7 +7,9 @@ import { hasSupabase } from '../lib/supabase';
 import { Logo } from '../components/Logo';
 import { Button } from '../components/ui';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { LangSwitcher } from '../components/LangSwitcher';
 import { PLANES, TRIAL_DAYS } from '../lib/planes';
+import { t } from '../i18n';
 
 type Modo = 'login' | 'registro' | 'recuperar';
 
@@ -48,25 +50,25 @@ export default function Login() {
       if (modo === 'login') await signIn(email, password);
       if (modo === 'registro') {
         const { needsConfirmation } = await signUp(email, password, nombre, estudio, plan.id);
-        if (needsConfirmation) setMsg('¡Cuenta creada! Revisá tu email para confirmarla y después ingresá.');
+        if (needsConfirmation) setMsg(t('¡Cuenta creada! Revisá tu email para confirmarla y después ingresá.'));
       }
       if (modo === 'recuperar') {
         await resetPassword(email);
-        setMsg('Si el email existe, te enviamos un enlace para restablecer la contraseña.');
+        setMsg(t('Si el email existe, te enviamos un enlace para restablecer la contraseña.'));
       }
     } catch (err) {
       const { code, message } = err as { code?: string; message: string };
       const is = (c: string, m: string) => code === c || message === m;
       if (is('user_already_exists', 'User already registered')) {
-        setError({ text: 'Ya existe una cuenta con este email.', action: 'login' });
+        setError({ text: t('Ya existe una cuenta con este email.'), action: 'login' });
       } else if (is('invalid_credentials', 'Invalid login credentials')) {
-        setError({ text: 'Email o contraseña incorrectos. Si todavía no tenés cuenta, registrate.', action: 'registro' });
+        setError({ text: t('Email o contraseña incorrectos. Si todavía no tenés cuenta, registrate.'), action: 'registro' });
       } else if (is('email_not_confirmed', 'Email not confirmed')) {
-        setError({ text: 'Todavía no confirmaste tu email. Revisá tu bandeja (y spam).', action: 'reenviar' });
+        setError({ text: t('Todavía no confirmaste tu email. Revisá tu bandeja (y spam).'), action: 'reenviar' });
       } else if (code === 'over_email_send_rate_limit' || /rate limit/i.test(message)) {
-        setError({ text: 'Demasiados intentos. Esperá unos minutos y volvé a probar.' });
+        setError({ text: t('Demasiados intentos. Esperá unos minutos y volvé a probar.') });
       } else if (code === 'weak_password') {
-        setError({ text: 'La contraseña es muy débil. Usá al menos 6 caracteres con letras y números.' });
+        setError({ text: t('La contraseña es muy débil. Usá al menos 6 caracteres con letras y números.') });
       } else {
         setError({ text: message });
       }
@@ -80,7 +82,7 @@ export default function Login() {
     try {
       await resendConfirmation(email);
       setError(null);
-      setMsg('Te reenviamos el email de confirmación.');
+      setMsg(t('Te reenviamos el email de confirmación.'));
     } catch (err) {
       setError({ text: (err as Error).message });
     } finally {
@@ -89,9 +91,9 @@ export default function Login() {
   }
 
   const titulos: Record<Modo, [string, string]> = {
-    login: ['Bienvenido de nuevo', 'Ingresá para ver tus obras.'],
-    registro: ['Creá tu cuenta', 'Tu espacio de trabajo privado en un minuto.'],
-    recuperar: ['Recuperar contraseña', 'Te enviamos un enlace a tu email.'],
+    login: [t('Bienvenido de nuevo'), t('Ingresá para ver tus obras.')],
+    registro: [t('Creá tu cuenta'), t('Tu espacio de trabajo privado en un minuto.')],
+    recuperar: [t('Recuperar contraseña'), t('Te enviamos un enlace a tu email.')],
   };
 
   return (
@@ -100,8 +102,9 @@ export default function Login() {
         <div className="flex items-center justify-between">
           <Link to="/"><Logo /></Link>
           <div className="flex items-center gap-1">
+            <LangSwitcher />
             <ThemeToggle />
-            <Link to="/" className="inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-ink"><ArrowLeft size={16} /> Volver</Link>
+            <Link to="/" className="inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-ink"><ArrowLeft size={16} /> {t("Volver")}</Link>
           </div>
         </div>
         <div className="flex flex-1 items-center justify-center py-10">
@@ -112,7 +115,7 @@ export default function Login() {
                 <p className="mb-8 mt-2 text-muted">{titulos[modo][1]}</p>
                 {modo === 'registro' && (
                   <p className="-mt-4 mb-6 inline-flex items-center gap-1.5 rounded-full bg-lilac-bg px-3 py-1 text-xs font-semibold text-lilac">
-                    Plan {plan.nombre} · {TRIAL_DAYS} días gratis, sin tarjeta
+                    {t("Plan {plan} · {n} días gratis, sin tarjeta", { plan: t(plan.nombre), n: TRIAL_DAYS })}
                   </p>
                 )}
 
@@ -121,7 +124,7 @@ export default function Login() {
                     {(['login', 'registro'] as const).map((m) => (
                       <button key={m} type="button" onClick={() => cambiar(m)} className={`relative rounded-lg py-2 text-sm font-semibold ${modo === m ? 'text-ink' : 'text-muted'}`}>
                         {modo === m && <motion.span layoutId="auth-tab" className="absolute inset-0 rounded-lg bg-slate-100" />}
-                        <span className="relative">{m === 'login' ? 'Login' : 'Register'}</span>
+                        <span className="relative">{m === 'login' ? t('Login') : t('Register')}</span>
                       </button>
                     ))}
                   </div>
@@ -130,38 +133,38 @@ export default function Login() {
                 <form onSubmit={onSubmit} className="space-y-3">
                   {modo === 'registro' && (
                     <>
-                      <Input icon={User} placeholder="Tu nombre" autoComplete="name" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
-                      <Input icon={Building2} placeholder="Estudio / empresa (opcional)" value={estudio} onChange={(e) => setEstudio(e.target.value)} />
+                      <Input icon={User} placeholder={t("Tu nombre")} autoComplete="name" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
+                      <Input icon={Building2} placeholder={t("Estudio / empresa (opcional)")} value={estudio} onChange={(e) => setEstudio(e.target.value)} />
                     </>
                   )}
-                  <Input icon={Mail} type="email" placeholder="Email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  <Input icon={Mail} type="email" placeholder={t("Email")} autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                   {modo !== 'recuperar' && (
-                    <Input icon={Lock} type="password" placeholder="Contraseña (mín. 6 caracteres)" autoComplete={modo === 'login' ? 'current-password' : 'new-password'}
+                    <Input icon={Lock} type="password" placeholder={t("Contraseña (mín. 6 caracteres)")} autoComplete={modo === 'login' ? 'current-password' : 'new-password'}
                       minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} required />
                   )}
 
                   {error && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-peach-bg px-3 py-2 text-sm font-medium text-peach">
                       {error.text}
-                      {error.action === 'login' && <> <button type="button" onClick={() => cambiar('login')} className="font-bold underline">Ingresá</button> o <button type="button" onClick={() => cambiar('recuperar')} className="font-bold underline">recuperá tu contraseña</button>.</>}
-                      {error.action === 'registro' && <> <button type="button" onClick={() => cambiar('registro')} className="font-bold underline">Crear cuenta</button></>}
-                      {error.action === 'reenviar' && <> <button type="button" onClick={reenviar} disabled={busy} className="font-bold underline">Reenviar email</button></>}
+                      {error.action === 'login' && <> <button type="button" onClick={() => cambiar('login')} className="font-bold underline">{t("Ingresá")}</button> {t("o")} <button type="button" onClick={() => cambiar('recuperar')} className="font-bold underline">{t("recuperá tu contraseña")}</button>.</>}
+                      {error.action === 'registro' && <> <button type="button" onClick={() => cambiar('registro')} className="font-bold underline">{t("Crear cuenta")}</button></>}
+                      {error.action === 'reenviar' && <> <button type="button" onClick={reenviar} disabled={busy} className="font-bold underline">{t("Reenviar email")}</button></>}
                     </motion.div>
                   )}
                   {msg && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-sage-bg px-3 py-2 text-sm font-medium text-sage">{msg}</motion.p>}
 
                   <Button type="submit" disabled={busy} className="w-full py-3">
-                    {busy ? 'Procesando…' : modo === 'login' ? 'Ingresar' : modo === 'registro' ? 'Crear cuenta' : 'Enviar enlace'}
+                    {busy ? t('Procesando…') : modo === 'login' ? t('Ingresar') : modo === 'registro' ? t('Crear cuenta') : t('Enviar enlace')}
                   </Button>
                 </form>
 
                 <div className="mt-5 text-center text-sm">
-                  {modo === 'login' && <button type="button" onClick={() => cambiar('recuperar')} className="font-medium text-muted hover:text-ink">¿Olvidaste tu contraseña?</button>}
-                  {modo === 'recuperar' && <button type="button" onClick={() => cambiar('login')} className="font-medium text-muted hover:text-ink">Volver al login</button>}
+                  {modo === 'login' && <button type="button" onClick={() => cambiar('recuperar')} className="font-medium text-muted hover:text-ink">{t("¿Olvidaste tu contraseña?")}</button>}
+                  {modo === 'recuperar' && <button type="button" onClick={() => cambiar('login')} className="font-medium text-muted hover:text-ink">{t("Volver al login")}</button>}
                 </div>
                 {!hasSupabase && (
                   <p className="mt-6 rounded-xl border border-dashed border-line p-3 text-center text-xs text-muted">
-                    Modo demo: Supabase no está configurado. Cualquier email/contraseña entra con datos de ejemplo guardados en este navegador.
+                    {t("Modo demo: Supabase no está configurado. Cualquier email/contraseña entra con datos de ejemplo guardados en este navegador.")}
                   </p>
                 )}
               </motion.div>
@@ -174,8 +177,8 @@ export default function Login() {
         <div className="absolute -left-20 top-20 h-80 w-80 rounded-full bg-lilac/40 blur-3xl" />
         <div className="absolute bottom-10 right-0 h-80 w-80 rounded-full bg-sky/40 blur-3xl" />
         <div className="relative flex h-full flex-col justify-center px-16 text-white">
-          <p className="max-w-md text-3xl font-bold leading-tight">“Ahora sé qué se pidió, qué se gastó y qué falta, sin llamar a nadie.”</p>
-          <p className="mt-4 text-slate-400">Así trabaja un jefe de obra con orden.</p>
+          <p className="max-w-md text-3xl font-bold leading-tight">{t("“Ahora sé qué se pidió, qué se gastó y qué falta, sin llamar a nadie.”")}</p>
+          <p className="mt-4 text-slate-400">{t("Así trabaja un jefe de obra con orden.")}</p>
           <div className="mt-12 space-y-3">
             {[
               { icon: KanbanSquare, t: 'Tareas al día', c: 'bg-sky-bg text-sky' },
@@ -185,7 +188,7 @@ export default function Login() {
               <motion.div key={x.t} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 + i * 0.12 }}
                 className="flex w-fit items-center gap-3 rounded-2xl bg-white/10 px-4 py-3 backdrop-blur">
                 <span className={`grid h-9 w-9 place-items-center rounded-xl ${x.c}`}><x.icon size={18} /></span>
-                <span className="font-semibold">{x.t}</span>
+                <span className="font-semibold">{t(x.t)}</span>
               </motion.div>
             ))}
           </div>
