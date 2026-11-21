@@ -57,9 +57,14 @@
   --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.35), 0 12px 32px -8px rgb(0 0 0 / 0.55);
 }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+/* Los ítems de grid no crecen más que su columna (evita desbordes en móvil). */
+.grid > * { min-width: 0; }
+/* Evita el zoom automático de iOS al enfocar inputs (necesita >= 16px). */
+@media (max-width: 639px) { .field { font-size: 16px; } }
 body {
   @apply bg-bone text-ink antialiased font-sans;
+  overflow-x: clip;
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 

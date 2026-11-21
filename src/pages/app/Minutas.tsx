@@ -96,10 +96,10 @@ export default function Minutas() {
                     <h3 className="label flex items-center gap-1.5"><CheckSquare size={13} /> {t("Acuerdos y responsables")}</h3>
                     {current.acuerdos?.length ? (
                       <div className="overflow-hidden rounded-xl border border-line">
-                        <table className="w-full text-sm">
+                        <div className="thin-scroll overflow-x-auto"><table className="w-full min-w-[460px] text-sm">
                           <thead className="bg-slate-50 text-xs uppercase tracking-wide text-muted"><tr><th className="px-4 py-2 text-left">{t("Acuerdo")}</th><th className="px-4 py-2 text-left">{t("Responsable")}</th><th className="px-4 py-2 text-left">{t("Fecha")}</th></tr></thead>
                           <tbody>{current.acuerdos.map((a, i) => <tr key={i} className="border-t border-line"><td className="px-4 py-2">{a.texto}</td><td className="px-4 py-2 font-medium">{a.responsable || '—'}</td><td className="px-4 py-2 tabular-nums">{fmtDate(a.fecha)}</td></tr>)}</tbody>
-                        </table>
+                        </table></div>
                       </div>
                     ) : <p className="text-sm text-muted">{t("Sin acuerdos registrados.")}</p>}
                   </section>
@@ -136,8 +136,8 @@ export default function Minutas() {
             </div>
             <div className="space-y-2">
               {form.acuerdos.map((a, i) => (
-                <div key={i} className="grid gap-2 sm:grid-cols-[1fr_150px_140px_36px]">
-                  <input className="field" placeholder={t("Acuerdo")} aria-label={t("Acuerdo")} value={a.texto} onChange={(e) => setAcuerdo(i, { texto: e.target.value })} />
+                <div key={i} className="grid grid-cols-[1fr_1fr_36px] gap-2 rounded-2xl border border-line p-2 sm:grid-cols-[1fr_150px_140px_36px] sm:rounded-none sm:border-0 sm:p-0">
+                  <input className="field col-span-3 sm:col-span-1" placeholder={t("Acuerdo")} aria-label={t("Acuerdo")} value={a.texto} onChange={(e) => setAcuerdo(i, { texto: e.target.value })} />
                   <input className="field" placeholder={t("Responsable")} aria-label={t("Responsable")} value={a.responsable} onChange={(e) => setAcuerdo(i, { responsable: e.target.value })} />
                   <input className="field" type="date" aria-label={t("Fecha")} value={a.fecha} onChange={(e) => setAcuerdo(i, { fecha: e.target.value })} />
                   <IconButton icon={Trash2} label={t("Quitar acuerdo")} className="self-center" onClick={() => setForm({ ...form, acuerdos: form.acuerdos.filter((_, j) => j !== i) })} />

@@ -98,8 +98,8 @@ export function NuevoPedido() {
             <AnimatePresence initial={false}>
               {items.map((it, i) => (
                 <motion.div key={i} layout initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                  className="grid grid-cols-[1fr_auto] gap-2 sm:grid-cols-[1fr_110px_110px_36px]">
-                  <input className="field col-span-2 sm:col-span-1" placeholder={t("Ej. Cemento portland")} aria-label={t("Descripción")} value={it.descripcion} onChange={(e) => setItem(i, { descripcion: e.target.value })} />
+                  className="grid grid-cols-[1fr_1fr_36px] gap-2 rounded-2xl border border-line p-2 sm:grid-cols-[1fr_110px_110px_36px] sm:rounded-none sm:border-0 sm:p-0">
+                  <input className="field col-span-3 sm:col-span-1" placeholder={t("Ej. Cemento portland")} aria-label={t("Descripción")} value={it.descripcion} onChange={(e) => setItem(i, { descripcion: e.target.value })} />
                   <input className="field" type="number" min={0} step="any" aria-label={t("Cantidad")} value={it.cantidad} onChange={(e) => setItem(i, { cantidad: Number(e.target.value) })} />
                   <Select value={it.unidad} ariaLabel={t('Unidad')} menuMinWidth={120} onChange={(v) => setItem(i, { unidad: v })}
                     options={UNIDADES.map((u) => ({ value: u, label: t(u) }))} />
@@ -144,9 +144,11 @@ export function MisPedidos() {
         actions={<Button icon={Plus} onClick={() => navigate('/app/pedidos/nuevo')}>{t("Nuevo pedido")}</Button>} />
 
       <div className="mb-5 flex flex-wrap items-center gap-3">
+        <div className="thin-scroll -mx-4 w-[calc(100%+2rem)] overflow-x-auto px-4 pb-1 sm:mx-0 sm:w-auto sm:overflow-visible sm:px-0 sm:pb-0">
         <Segmented value={filtro} onChange={setFiltro}
           options={[{ value: 'todos', label: `${t('Todos')} (${rows.length})` }, ...PEDIDO_ESTADOS.map((s) => ({ value: s, label: `${ESTADO_PEDIDO[s].label} (${rows.filter((r) => r.estado === s).length})` }))]} />
-        <div className="relative min-w-[200px] flex-1 sm:max-w-xs">
+        </div>
+        <div className="relative w-full sm:w-auto sm:min-w-[200px] sm:max-w-xs sm:flex-1">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input className="field pl-9" placeholder={t("Buscar pedido o material…")} value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
