@@ -13,6 +13,7 @@ const ERRORES: Record<string, string> = {
   get invitacion_invalida() { return t('Este link de invitación no existe o fue revocado.'); },
   get invitacion_usada() { return t('Esta invitación ya fue aceptada por otra cuenta. Pedile un link nuevo al jefe de obra.'); },
   get invitacion_propia() { return t('Esta invitación la creaste vos. Compartila con el administrativo del estudio.'); },
+  get rol_no_admitido() { return t('Tu cuenta es de Jefe de obra. Para aceptar invitaciones necesitás una cuenta de Compras o Dirección de obra.'); },
 };
 
 export default function Invitacion() {
@@ -57,8 +58,8 @@ export default function Invitacion() {
         </div>
       </>
     );
-  } else if (!info || info.es_propia || error) {
-    const msg = error ?? (info?.es_propia ? ERRORES.invitacion_propia : ERRORES.invitacion_invalida);
+  } else if (!info || info.es_propia || error || (info.mi_rol === 'jefe_obra' && !info.es_mia)) {
+    const msg = error ?? (info?.es_propia ? ERRORES.invitacion_propia : info?.mi_rol === 'jefe_obra' ? ERRORES.rol_no_admitido : ERRORES.invitacion_invalida);
     body = (
       <>
         <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-peach-bg text-peach"><AlertTriangle size={22} /></div>
@@ -90,7 +91,9 @@ export default function Invitacion() {
         <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-lilac-bg text-lilac"><Building2 size={22} /></div>
         <h1 className="text-xl font-bold">{t('{x} te invitó a su equipo', { x: quien })}</h1>
         {info.owner_estudio && <p className="text-sm font-semibold text-lilac">{info.owner_estudio}</p>}
-        <p className="mt-3 text-sm text-muted">{t('Vas a poder ver el resumen y los pedidos de {x}, y cambiar el estado de los pedidos (aprobar, en camino, entregado).', { x: que })}</p>
+        <p className="mt-3 text-sm text-muted">{info.mi_rol === 'direccion_obra'
+          ? t('Como Dirección de obra vas a poder ver el resumen de tareas de {x}.', { x: que })
+          : t('Como Compras vas a poder aprobar o rechazar los pedidos de {x} y gestionar sus fletes y volquetes.', { x: que })}</p>
         <p className="mt-2 text-xs text-muted">{t('Vas a ingresar como {x}.', { x: user.email ?? '' })}</p>
         <Button className="mt-6 w-full" icon={CheckCircle2} disabled={busy} onClick={aceptar}>{busy ? t('Procesando…') : t('Aceptar invitación')}</Button>
       </>

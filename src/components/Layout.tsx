@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useState, type FormEvent } from 'react';
-import { NavLink, useLocation, useOutlet, Link } from 'react-router-dom';
+import { NavLink, Navigate, useLocation, useOutlet, Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   KanbanSquare, PackagePlus, ClipboardList, Calculator, Wallet, HardHat, FilePlus2, FolderInput, NotebookPen,
@@ -18,6 +18,7 @@ import { diasDePrueba } from '../lib/planes';
 import { t } from '../i18n';
 import { Select } from './Select';
 import { UserMenu } from './UserMenu';
+import { planDe, rolLabel, type PlanId, type Rol } from '../lib/roles';
 
 interface NavItem { to: string; label: string; icon: LucideIcon }
 export const NAV: { title: string; items: NavItem[] }[] = [
@@ -52,10 +53,26 @@ export const NAV: { title: string; items: NavItem[] }[] = [
 
 const readCollapsed = () => { try { return localStorage.getItem('obrabase:sidebar') === '1'; } catch { return false; } };
 
+/**
+ * Secciones visibles según rol y plan:
+ * - Compras / Dirección de obra: solo "Estudio" (su panel).
+ * - Jefe de obra en plan Inicial: sin "Estudio" ni "Recursos".
+ */
+export function navPara(rol: Rol, plan: PlanId) {
+  if (rol === 'compras') return [{ title: 'Estudio', items: [{ to: '/app/estudio', label: 'Panel de gestión', icon: Building }] }];
+  if (rol === 'direccion_obra') return [{ title: 'Estudio', items: [{ to: '/app/estudio', label: 'Resumen de tareas', icon: KanbanSquare }] }];
+  return plan === 'inicial' ? NAV.filter((s) => s.title !== 'Estudio' && s.title !== 'Recursos') : NAV;
+}
+
+/** Rutas que el plan Inicial no incluye. */
+const BLOQUEADAS_INICIAL = ['/app/estudio', '/app/equipo', '/app/recursos'];
+
 function Sidebar({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {
+  const { user, rol } = useAuth();
+  const secciones = navPara(rol, planDe(user));
   return (
     <nav className="thin-scroll flex-1 space-y-5 overflow-y-auto px-3 pb-6">
-      {NAV.map((sec) => (
+      {secciones.map((sec) => (
         <div key={sec.title}>
           {collapsed ? <div className="mx-auto mb-2 h-px w-6 bg-line" /> : (
             <p className="mb-1.5 px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">{t(sec.title)}</p>
@@ -119,7 +136,9 @@ function PrimeraObra() {
 }
 
 export default function Layout() {
-  const { user } = useAuth();
+  const { user, rol } = useAuth();
+  const esJefe = rol === 'jefe_obra';
+  const plan = planDe(user);
   const { obras, loading } = useObra();
   const location = useLocation();
   const outlet = useOutlet();
@@ -129,8 +148,12 @@ export default function Layout() {
   useEffect(() => { try { localStorage.setItem('obrabase:sidebar', collapsed ? '1' : '0'); } catch { /* noop */ } }, [collapsed]);
   useEffect(() => setMobileOpen(false), [location.pathname]);
 
-  const needsObra = !loading && obras.length === 0 && !['/app/obras', '/app/equipo', '/app/planes'].includes(location.pathname) && !location.pathname.startsWith('/app/estudio');
+  const needsObra = esJefe && !loading && obras.length === 0 && !['/app/obras', '/app/equipo', '/app/planes'].includes(location.pathname) && !location.pathname.startsWith('/app/estudio');
   const trial = diasDePrueba(user?.created_at);
+
+  // Compras y Dirección de obra solo usan su panel; el plan Inicial no incluye Estudio ni Recursos.
+  if (!esJefe && !location.pathname.startsWith('/app/estudio')) return <Navigate to="/app/estudio" replace />;
+  if (esJefe && plan === 'inicial' && BLOQUEADAS_INICIAL.some((r) => location.pathname.startsWith(r))) return <Navigate to="/app/planes" replace />;
 
   return (
     <div className="flex min-h-screen">
@@ -138,16 +161,19 @@ export default function Layout() {
       <motion.aside animate={{ width: collapsed ? 76 : 264 }} transition={{ type: 'spring', damping: 30, stiffness: 300 }}
         className="sticky top-0 hidden h-screen shrink-0 flex-col border-r border-line bg-bone lg:flex">
         <div className={`flex h-16 items-center px-5 ${collapsed ? 'justify-center px-0' : 'justify-between'}`}>
-          <Link to="/app/obra/resumen"><Logo compact={collapsed} /></Link>
+          <Link to={esJefe ? '/app/obra/resumen' : '/app/estudio'}><Logo compact={collapsed} /></Link>
         </div>
         <Sidebar collapsed={collapsed} />
         <div className="border-t border-line p-3">
+          {esJefe && <>
           <NavLink to="/app/planes" title={t("Planes")} className={({ isActive }) => `mb-1 flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium ${collapsed ? 'justify-center' : ''} ${isActive ? 'bg-white text-ink shadow-soft' : 'text-slate-500 hover:bg-slate-100/70'}`}>
             <Gem size={18} />{!collapsed && t('Planes')}
           </NavLink>
           <NavLink to="/app/obras" title={t("Mis obras")} className={({ isActive }) => `mb-1 flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium ${collapsed ? 'justify-center' : ''} ${isActive ? 'bg-white text-ink shadow-soft' : 'text-slate-500 hover:bg-slate-100/70'}`}>
             <Building2 size={18} />{!collapsed && t('Mis obras')}
           </NavLink>
+          </>}
+          {!esJefe && !collapsed && <p className="mb-2 px-3 text-xs text-muted">{t('Rol')}: <b className="text-ink">{rolLabel(rol)}</b></p>}
           <button onClick={() => setCollapsed(!collapsed)} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100/70 ${collapsed ? 'justify-center' : ''}`}>
             {collapsed ? <PanelLeftOpen size={18} /> : <><PanelLeftClose size={18} /> {t("Contraer menú")}</>}
           </button>
@@ -166,10 +192,10 @@ export default function Layout() {
                 <button aria-label={t("Cerrar menú")} onClick={() => setMobileOpen(false)} className="rounded-lg p-1.5 hover:bg-slate-100"><X size={20} /></button>
               </div>
               <Sidebar collapsed={false} onNavigate={() => setMobileOpen(false)} />
-              <div className="border-t border-line p-3">
+              {esJefe && <div className="border-t border-line p-3">
                 <NavLink to="/app/planes" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600"><Gem size={18} /> {t("Planes")}</NavLink>
                 <NavLink to="/app/obras" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600"><Building2 size={18} /> {t("Mis obras")}</NavLink>
-              </div>
+              </div>}
             </motion.aside>
           </>
         )}
@@ -178,12 +204,13 @@ export default function Layout() {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-line bg-bone/85 px-3 backdrop-blur-md sm:gap-3 sm:px-6">
           <button aria-label={t("Abrir menú")} onClick={() => setMobileOpen(true)} className="shrink-0 rounded-lg p-1.5 hover:bg-slate-100 lg:hidden"><Menu size={20} /></button>
-          {obras.length > 0 && <ObraSelector />}
+          {esJefe && obras.length > 0 && <ObraSelector />}
           <div className="hidden flex-1 sm:block" />
           {!hasSupabase && <span className="hidden whitespace-nowrap rounded-full bg-peach-bg px-3 py-1 text-xs font-semibold text-peach xl:inline">{t("Modo demo · datos locales")}</span>}
-          <Link to="/app/planes" className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-lilac-bg px-3 py-1 text-xs font-semibold text-lilac transition hover:brightness-95 lg:inline-flex">
+          {esJefe && <Link to="/app/planes" className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-lilac-bg px-3 py-1 text-xs font-semibold text-lilac transition hover:brightness-95 lg:inline-flex">
             <Gem size={13} /> {trial > 0 ? t(trial === 1 ? 'Prueba gratis · {n} día' : 'Prueba gratis · {n} días', { n: trial }) : t('Prueba finalizada')}
-          </Link>
+          </Link>}
+          {!esJefe && <span className="hidden whitespace-nowrap rounded-full bg-lilac-bg px-3 py-1 text-xs font-semibold text-lilac sm:inline">{rolLabel(rol)}</span>}
           <LangSwitcher />
           <div className="hidden sm:block"><ThemeToggle /></div>
           <UserMenu />

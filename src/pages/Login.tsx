@@ -9,6 +9,8 @@ import { Button } from '../components/ui';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { LangSwitcher } from '../components/LangSwitcher';
 import { PLANES, TRIAL_DAYS } from '../lib/planes';
+import { ROLES, type Rol } from '../lib/roles';
+import { TONE } from '../components/ui';
 import { t } from '../i18n';
 
 type Modo = 'login' | 'registro' | 'recuperar';
@@ -32,6 +34,8 @@ export default function Login() {
   const navigate = useNavigate();
   const [modo, setModo] = useState<Modo>(location.pathname === '/registro' ? 'registro' : 'login');
   const plan = PLANES.find((p) => p.id === new URLSearchParams(location.search).get('plan')) ?? PLANES[1];
+  // Si viene de una invitación, lo más probable es que sea de Compras o Dirección de obra.
+  const [rol, setRol] = useState<Rol>(next.startsWith('/invitacion/') ? 'compras' : 'jefe_obra');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [nombre, setNombre] = useState('');
@@ -53,7 +57,7 @@ export default function Login() {
     try {
       if (modo === 'login') await signIn(email, password);
       if (modo === 'registro') {
-        const { needsConfirmation } = await signUp(email, password, nombre, estudio, plan.id);
+        const { needsConfirmation } = await signUp(email, password, nombre, estudio, plan.id, rol);
         if (needsConfirmation) setMsg(t('¡Cuenta creada! Revisá tu email para confirmarla y después ingresá.'));
       }
       if (modo === 'recuperar') {
@@ -117,7 +121,7 @@ export default function Login() {
               <motion.div key={modo} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
                 <h1 className="text-3xl font-extrabold tracking-tight">{titulos[modo][0]}</h1>
                 <p className="mb-8 mt-2 text-muted">{titulos[modo][1]}</p>
-                {modo === 'registro' && (
+                {modo === 'registro' && rol === 'jefe_obra' && (
                   <p className="-mt-4 mb-6 inline-flex items-center gap-1.5 rounded-full bg-lilac-bg px-3 py-1 text-xs font-semibold text-lilac">
                     {t("Plan {plan} · {n} días gratis, sin tarjeta", { plan: t(plan.nombre), n: TRIAL_DAYS })}
                   </p>
@@ -137,6 +141,31 @@ export default function Login() {
                 <form onSubmit={onSubmit} className="space-y-3">
                   {modo === 'registro' && (
                     <>
+                      <fieldset className="mb-1">
+                        <legend className="label">{t('¿Cuál es tu rol?')}</legend>
+                        <div className="grid gap-2">
+                          {ROLES.map((r) => {
+                            const sel = rol === r.id;
+                            return (
+                              <label key={r.id}
+                                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition ${sel ? 'border-lilac/40 bg-lilac-bg/40 ring-2 ring-lilac-bg' : 'border-line bg-white hover:border-slate-300'}`}>
+                                <input type="radio" name="rol" value={r.id} checked={sel} onChange={() => setRol(r.id)} className="sr-only" />
+                                <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${TONE[r.tone]}`}><r.icon size={17} /></span>
+                                <span className="min-w-0 flex-1">
+                                  <span className="block text-sm font-semibold">{r.label}</span>
+                                  <span className="block text-xs text-muted">{r.descripcion}</span>
+                                </span>
+                                <span className={`mt-1 grid h-4 w-4 shrink-0 place-items-center rounded-full border-2 ${sel ? 'border-lilac' : 'border-slate-300'}`}>
+                                  {sel && <span className="h-2 w-2 rounded-full bg-lilac" />}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                        {rol !== 'jefe_obra' && (
+                          <p className="mt-2 text-xs text-muted">{t('Vas a ver las obras que te comparta un jefe de obra con un link de invitación.')}</p>
+                        )}
+                      </fieldset>
                       <Input icon={User} placeholder={t("Tu nombre")} autoComplete="name" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
                       <Input icon={Building2} placeholder={t("Estudio / empresa (opcional)")} value={estudio} onChange={(e) => setEstudio(e.target.value)} />
                     </>
