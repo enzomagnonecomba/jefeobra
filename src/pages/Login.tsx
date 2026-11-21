@@ -29,7 +29,8 @@ export default function Login() {
   const location = useLocation();
   // Volver a donde venía (ej. una invitación). Solo rutas internas.
   const rawNext = new URLSearchParams(location.search).get('next') ?? '';
-  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/app';
+  // Ruta interna: empieza con una sola '/' y sin barras invertidas (los navegadores tratan '/\x' como '//x').
+  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') && !rawNext.includes('\\') ? rawNext : '/app';
   const qs = next !== '/app' ? `?next=${encodeURIComponent(next)}` : '';
   const navigate = useNavigate();
   const [modo, setModo] = useState<Modo>(location.pathname === '/registro' ? 'registro' : 'login');
@@ -153,7 +154,7 @@ export default function Login() {
                                 <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${TONE[r.tone]}`}><r.icon size={17} /></span>
                                 <span className="min-w-0 flex-1">
                                   <span className="block text-sm font-semibold">{r.label}</span>
-                                  <span className="block text-xs text-muted">{r.descripcion}</span>
+                                  <span className="block text-xs text-slate-600">{r.descripcion}</span>
                                 </span>
                                 <span className={`mt-1 grid h-4 w-4 shrink-0 place-items-center rounded-full border-2 ${sel ? 'border-lilac' : 'border-slate-300'}`}>
                                   {sel && <span className="h-2 w-2 rounded-full bg-lilac" />}

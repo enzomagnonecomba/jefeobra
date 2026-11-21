@@ -32,9 +32,10 @@ export function UserMenu() {
 
   return (
     <div ref={ref} className="relative shrink-0">
-      <button onClick={() => setOpen(!open)} aria-haspopup="menu" aria-expanded={open} aria-label={t('Mi cuenta')}
+      <button onClick={() => setOpen(!open)} aria-haspopup="menu" aria-expanded={open}
         className="grid h-9 w-9 place-items-center rounded-full bg-lilac-bg text-sm font-bold uppercase text-lilac outline-none ring-lilac/30 transition hover:ring-4 focus-visible:ring-4">
-        {initial}
+        <span className="sr-only">{t('Mi cuenta')}</span>
+        <span aria-hidden="true">{initial}</span>
       </button>
       <AnimatePresence>
         {open && (

@@ -75,7 +75,7 @@ function Sidebar({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: (
       {secciones.map((sec) => (
         <div key={sec.title}>
           {collapsed ? <div className="mx-auto mb-2 h-px w-6 bg-line" /> : (
-            <p className="mb-1.5 px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">{t(sec.title)}</p>
+            <p className="mb-1.5 px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">{t(sec.title)}</p>
           )}
           <div className="space-y-0.5">
             {sec.items.map(({ to, label, icon: Icon }) => (
