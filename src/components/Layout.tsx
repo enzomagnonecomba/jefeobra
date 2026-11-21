@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   KanbanSquare, PackagePlus, ClipboardList, Calculator, Wallet, HardHat, FilePlus2, FolderInput, NotebookPen,
   LayoutDashboard, Truck, Container, ShieldCheck, Shirt, Wrench, Building2, LogOut, PanelLeftClose, PanelLeftOpen,
-  Menu, X, ChevronDown, Gem, type LucideIcon,
+  Menu, X, Gem, type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useObra } from '../context/ObraContext';
@@ -16,6 +16,7 @@ import { ThemeToggle } from './ThemeToggle';
 import { LangSwitcher } from './LangSwitcher';
 import { diasDePrueba } from '../lib/planes';
 import { t } from '../i18n';
+import { Select } from './Select';
 
 interface NavItem { to: string; label: string; icon: LucideIcon }
 export const NAV: { title: string; items: NavItem[] }[] = [
@@ -78,14 +79,10 @@ function Sidebar({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: (
 function ObraSelector() {
   const { obras, obraActiva, seleccionar } = useObra();
   return (
-    <div className="relative">
-      <Building2 size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sage" />
-      <select aria-label={t("Obra activa")} value={obraActiva?.id ?? ''} onChange={(e) => seleccionar(e.target.value)}
-        className="max-w-[220px] cursor-pointer appearance-none truncate rounded-xl border border-line bg-white py-2 pl-9 pr-8 text-sm font-semibold shadow-soft outline-none focus:ring-4 focus:ring-sage-bg sm:max-w-xs">
-        {obras.map((o) => <option key={o.id} value={o.id}>{o.nombre}</option>)}
-      </select>
-      <ChevronDown size={15} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-muted" />
-    </div>
+    <Select value={obraActiva?.id ?? ''} onChange={seleccionar} ariaLabel={t('Obra activa')} menuMinWidth={240}
+      icon={<Building2 size={16} className="shrink-0 text-sage" />}
+      className="!w-auto max-w-[180px] !py-2 font-semibold shadow-soft sm:max-w-xs"
+      options={obras.map((o) => ({ value: o.id, label: o.nombre, hint: o.direccion ?? undefined }))} />
   );
 }
 

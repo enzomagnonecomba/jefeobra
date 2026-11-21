@@ -12,6 +12,7 @@ import {
 } from '../../components/ui';
 import { PEDIDO_ESTADOS, PRIORIDADES, type Pedido, type PedidoEstado, type PedidoItem, type Prioridad } from '../../types';
 import { t } from '../../i18n';
+import { Select } from '../../components/Select';
 
 export const ESTADO_PEDIDO: Record<PedidoEstado, { label: string; tone: Tone }> = {
   pendiente: { get label() { return t('Pendiente'); }, tone: 'peach' },
@@ -100,9 +101,8 @@ export function NuevoPedido() {
                   className="grid grid-cols-[1fr_auto] gap-2 sm:grid-cols-[1fr_110px_110px_36px]">
                   <input className="field col-span-2 sm:col-span-1" placeholder={t("Ej. Cemento portland")} aria-label={t("Descripción")} value={it.descripcion} onChange={(e) => setItem(i, { descripcion: e.target.value })} />
                   <input className="field" type="number" min={0} step="any" aria-label={t("Cantidad")} value={it.cantidad} onChange={(e) => setItem(i, { cantidad: Number(e.target.value) })} />
-                  <select className="field" aria-label={t("Unidad")} value={it.unidad} onChange={(e) => setItem(i, { unidad: e.target.value })}>
-                    {UNIDADES.map((u) => <option key={u} value={u}>{t(u)}</option>)}
-                  </select>
+                  <Select value={it.unidad} ariaLabel={t('Unidad')} menuMinWidth={120} onChange={(v) => setItem(i, { unidad: v })}
+                    options={UNIDADES.map((u) => ({ value: u, label: t(u) }))} />
                   <IconButton icon={Trash2} label={t("Quitar ítem")} className="self-center" disabled={items.length === 1} onClick={() => setItems(items.filter((_, j) => j !== i))} />
                 </motion.div>
               ))}
@@ -286,9 +286,8 @@ export function Calculos() {
           {tipo === 'hormigon' && input('espesor', 'Espesor', 'm')}
           {tipo === 'ladrillos' && (
             <Field label={t("Tipo de ladrillo")}>
-              <select className="field" value={v.ladrillo} onChange={(e) => setV({ ...v, ladrillo: e.target.value })}>
-                {Object.entries(LADRILLOS).map(([k, l]) => <option key={k} value={k}>{l.label}</option>)}
-              </select>
+              <Select value={v.ladrillo} ariaLabel={t('Tipo de ladrillo')} onChange={(x) => setV({ ...v, ladrillo: x })}
+                options={Object.entries(LADRILLOS).map(([k, l]) => ({ value: k, label: l.label, hint: `${l.porM2} u/m²` }))} />
             </Field>
           )}
           {tipo === 'desperdicio' && input('base', 'Cantidad neta', 'u')}

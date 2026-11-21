@@ -6,6 +6,7 @@ import { useToast } from './Toast';
 import { Badge, Button, Card, EmptyState, Field, IconButton, Modal, PageHeader, TONE, fmtDate, fmtMoney, today, type Tone } from './ui';
 import type { Row, TableName } from '../types';
 import { t } from '../i18n';
+import { Select } from './Select';
 
 export interface Option { value: string; label: string; tone?: Tone }
 
@@ -65,20 +66,9 @@ function autoCell(field: FieldDef | undefined, value: unknown): ReactNode {
 }
 
 function StatusPill({ field, value, onChange }: { field: FieldDef; value: string; onChange: (v: string) => void }) {
-  const o = field.options?.find((x) => x.value === value);
   return (
-    <span className={`relative inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${TONE[o?.tone ?? 'slate']}`}>
-      {o ? t(o.label) : value}
-      <select
-        aria-label={t('Cambiar {x}', { x: t(field.label) })}
-        className="absolute inset-0 cursor-pointer opacity-0"
-        value={value}
-        onClick={(e) => e.stopPropagation()}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        {field.options?.map((x) => <option key={x.value} value={x.value}>{t(x.label)}</option>)}
-      </select>
-    </span>
+    <Select variant="pill" value={value} onChange={onChange} ariaLabel={t('Cambiar {x}', { x: t(field.label) })}
+      options={(field.options ?? []).map((x) => ({ value: x.value, label: t(x.label), tone: x.tone }))} />
   );
 }
 
@@ -229,10 +219,8 @@ export default function CrudModule<T extends Row>({ config }: { config: CrudConf
           {fields.map((f) => (
             <Field key={f.key} label={`${t(f.label)}${f.required ? ' *' : ''}`} className={f.full || f.type === 'textarea' ? 'sm:col-span-2' : ''}>
               {f.type === 'select' ? (
-                <select className="field" value={form[f.key] ?? ''} required={f.required} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}>
-                  {!f.required && <option value="">—</option>}
-                  {f.options?.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
-                </select>
+                <Select value={form[f.key] ?? ''} ariaLabel={t(f.label)} onChange={(v) => setForm({ ...form, [f.key]: v })}
+                  options={[...(f.required ? [] : [{ value: '', label: '—' }]), ...(f.options ?? []).map((o) => ({ value: o.value, label: t(o.label), tone: o.tone }))]} />
               ) : f.type === 'textarea' ? (
                 <textarea className="field min-h-24" placeholder={f.placeholder && t(f.placeholder)} value={form[f.key] ?? ''} required={f.required}
                   onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} />
