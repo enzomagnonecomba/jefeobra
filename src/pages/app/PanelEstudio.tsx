@@ -1,16 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Building2, ClipboardList, PackageCheck, Truck, ShieldAlert, Search, CalendarDays, Store, HardHat, ChevronRight, ArrowLeft, Check, X,
-  ArrowRight, Users, Package, Container, KanbanSquare, MapPin, Clock, PauseCircle,
+  ArrowRight, Users, Package, Container, KanbanSquare, MapPin, Clock, PauseCircle, Hash, LogIn,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/Toast';
-import { Badge, Card, EmptyState, Modal, PageHeader, PRIORIDAD_LABEL, PRIORIDAD_TONE, Segmented, StatCard, TONE, daysUntil, fmtDate, fmtMoney, type Tone } from '../../components/ui';
+import { Badge, Button, Card, EmptyState, Modal, PageHeader, PRIORIDAD_LABEL, PRIORIDAD_TONE, Segmented, StatCard, TONE, daysUntil, fmtDate, fmtMoney, type Tone } from '../../components/ui';
 import { Select } from '../../components/Select';
 import * as db from '../../lib/db';
-import { cargarPanel, type DatosPanel } from '../../lib/estudio';
+import { cargarPanel, unirsePorCodigo, type DatosPanel, type ResultadoUnion } from '../../lib/estudio';
 import type { Rol } from '../../lib/roles';
 import { ResumenObra } from './Resumen';
 import { ESTADO_PEDIDO } from './Pedidos';
@@ -70,7 +70,7 @@ function usePanel() {
     }
   };
 
-  return { data, rol, cambiarEstado };
+  return { data, rol, cambiarEstado, recargar: cargar };
 }
 
 const saldoObra = (o: Obra, d: DatosPanel) => {
@@ -383,9 +383,58 @@ function ObrasGrid({ data, rol }: { data: DatosPanel; rol: Rol }) {
   );
 }
 
+// ---------------------------------------------------------------- sumarse con el ID
+const MENSAJE_UNION: Record<Exclude<ResultadoUnion, 'ok'>, string> = {
+  get codigo_invalido() { return t('No encontramos una obra con ese ID, o el acceso con ID está desactivado.'); },
+  get demasiados_intentos() { return t('Demasiados intentos. Esperá 10 minutos y volvé a probar.'); },
+  get rol_no_admitido() { return t('Solo las cuentas de Compras o Dirección de obra pueden sumarse con un ID.'); },
+  get propia() { return t('Esa obra es tuya.'); },
+};
+
+/** Formulario: escribir el ID que pasó el jefe de obra y sumarse a esa obra. */
+function UnirseConId({ onUnido, compacto = false }: { onUnido: () => void; compacto?: boolean }) {
+  const toast = useToast();
+  const [codigo, setCodigo] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true); setError(null);
+    try {
+      const r = await unirsePorCodigo(codigo);
+      if (r.estado === 'ok') {
+        toast.ok(t('Te sumaste a «{x}»', { x: r.obra_nombre ?? '' }));
+        setCodigo('');
+        onUnido();
+      } else setError(MENSAJE_UNION[r.estado]);
+    } catch (err) { setError((err as Error).message); }
+    finally { setBusy(false); }
+  }
+
+  return (
+    <form onSubmit={onSubmit} className={compacto ? 'space-y-3' : 'mx-auto max-w-md space-y-3'}>
+      <label className="block">
+        <span className="label">{t('ID de la obra')}</span>
+        <div className="relative">
+          <Hash size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input className="field pl-9 font-mono uppercase tracking-widest" placeholder="ABCD-1234" autoComplete="off" spellCheck={false}
+            maxLength={12} required value={codigo} onChange={(e) => setCodigo(e.target.value.toUpperCase())} />
+        </div>
+      </label>
+      {error && <p role="alert" className="rounded-xl bg-peach-bg px-3 py-2 text-sm font-medium text-peach">{error}</p>}
+      <Button type="submit" icon={LogIn} disabled={busy || codigo.replace(/[^A-Za-z0-9]/g, '').length < 8} className="w-full">
+        {busy ? t('Procesando…') : t('Sumarme a la obra')}
+      </Button>
+      <p className="text-center text-xs text-muted">{t('El jefe de obra lo encuentra en Estudio → Equipo. También podés usar un link de invitación.')}</p>
+    </form>
+  );
+}
+
 // ---------------------------------------------------------------- panel
 export default function PanelEstudio() {
-  const { data, rol, cambiarEstado } = usePanel();
+  const { data, rol, cambiarEstado, recargar } = usePanel();
+  const [unirse, setUnirse] = useState(false);
   const [params, setParams] = useSearchParams();
   const esCompras = rol === 'compras';
   const tabs = esCompras ? ['pedidos', 'servicios', 'obras'] as const : ['obras'] as const;
@@ -393,16 +442,24 @@ export default function PanelEstudio() {
 
   if (!data) return <Card className="p-10 text-center text-sm text-muted">{t('Cargando…')}</Card>;
 
+  const sumar = <Button variant="soft" icon={Hash} onClick={() => setUnirse(true)}>{t('Sumar obra con ID')}</Button>;
   const header = esCompras
-    ? <PageHeader title={t('Panel de gestión')} subtitle={t('Obras compartidas con vos por los jefes de obra del estudio')} icon={Building2} tone="lilac" />
-    : <PageHeader title={t('Resumen de tareas')} subtitle={t('Avance de las obras compartidas con vos')} icon={KanbanSquare} tone="sky" />;
+    ? <PageHeader title={t('Panel de gestión')} subtitle={t('Obras compartidas con vos por los jefes de obra del estudio')} icon={Building2} tone="lilac" actions={sumar} />
+    : <PageHeader title={t('Resumen de tareas')} subtitle={t('Avance de las obras compartidas con vos')} icon={KanbanSquare} tone="sky" actions={sumar} />;
+  const modalUnirse = (
+    <Modal open={unirse} onClose={() => setUnirse(false)} title={t('Sumar obra con ID')}>
+      <UnirseConId compacto onUnido={() => { setUnirse(false); void recargar(); }} />
+    </Modal>
+  );
 
   if (data.obras.length === 0) {
     return (
       <div>
         {header}
         <EmptyState icon={Users} title={t('Todavía no tenés obras conectadas')}
-          text={t('Pedile al jefe de obra que te envíe un link de invitación desde Equipo. Al abrirlo, sus obras van a aparecer acá.')} />
+          text={t('Escribí el ID de la obra que te pasó el jefe de obra, o abrí el link de invitación que te envió.')}
+          action={<UnirseConId onUnido={() => void recargar()} />} />
+        {modalUnirse}
       </div>
     );
   }
@@ -415,6 +472,7 @@ export default function PanelEstudio() {
   return (
     <div>
       {header}
+      {modalUnirse}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatCard label={t('Obras conectadas')} value={data.obras.length} icon={Building2} tone="lilac" />
         {esCompras ? <>

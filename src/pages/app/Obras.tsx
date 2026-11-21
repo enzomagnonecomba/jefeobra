@@ -6,6 +6,9 @@ import { useToast } from '../../components/Toast';
 import { Badge, Button, Card, Field, Modal, PageHeader, fmtMoney } from '../../components/ui';
 import type { Obra } from '../../types';
 import { t } from '../../i18n';
+import { CodigoObra } from '../../components/CodigoObra';
+import { useAuth } from '../../context/AuthContext';
+import { planDe } from '../../lib/roles';
 import { Select } from '../../components/Select';
 
 const ESTADO = {
@@ -17,6 +20,8 @@ const ESTADO = {
 export default function Obras() {
   const { obras, obraActiva, seleccionar, crearObra, actualizarObra, eliminarObra } = useObra();
   const toast = useToast();
+  const { user } = useAuth();
+  const conEstudio = planDe(user) === 'estudio';
   const [editing, setEditing] = useState<Obra | 'new' | null>(null);
   const [form, setForm] = useState({ nombre: '', direccion: '', presupuesto_caja: '0', estado: 'activa' as Obra['estado'] });
 
@@ -50,7 +55,12 @@ export default function Obras() {
               <Badge tone={ESTADO[o.estado].tone}>{ESTADO[o.estado].label}</Badge>
             </div>
             <p className="mb-1 flex items-center gap-1 text-sm text-muted"><MapPin size={14} /> {o.direccion || t('Sin dirección')}</p>
-            <p className="mb-4 text-sm text-muted">{t("Presupuesto caja chica:")} <b className="text-ink">{fmtMoney(o.presupuesto_caja)}</b></p>
+            <p className="mb-3 text-sm text-muted">{t("Presupuesto caja chica:")} <b className="text-ink">{fmtMoney(o.presupuesto_caja)}</b></p>
+            {conEstudio && (
+              <p className="mb-4 flex flex-wrap items-center gap-2 text-xs text-muted">
+                {t('ID de la obra')}: <CodigoObra codigo={o.codigo} activo={o.acceso_por_codigo !== false} />
+              </p>
+            )}
             <div className="flex gap-2">
               {obraActiva?.id === o.id
                 ? <Badge tone="sage"><Check size={12} /> {t("Obra activa")}</Badge>

@@ -5,7 +5,7 @@
 | Nivel | Herramienta | Qué cubre | Estado |
 |---|---|---|---|
 | Tipos | `tsc --noEmit` (strict) | Contratos entre componentes y dominio | En cada build |
-| E2E funcional | Playwright | Flujos de usuario por rol | 86 tests |
+| E2E funcional | Playwright | Flujos de usuario por rol | 97 tests |
 | Seguridad | Playwright + análisis estático | XSS, redirects, secretos, headers, RLS en SQL | Incluido |
 | Rendimiento | Playwright (Performance API, CDP) | Web Vitals, cambios de ruta, bundle | Incluido |
 | Accesibilidad | `@axe-core/playwright` | WCAG 2.1 A/AA | 10 pantallas |
@@ -22,7 +22,8 @@ Los tests E2E corren contra el **build de producción en modo demo** (`dist-demo
 | `auth.spec.ts` | 7 | Rutas protegidas, login, registro con rol, plan por rol, `?next`, logout, recuperación neutra |
 | `jefe.spec.ts` | 13 | 17 secciones sin errores, Kanban (alta/mover/modal), caja chica, cálculos → pedido, validación de pedido, presupuesto → saldo, CRUD de fletes, minutas, alertas de seguros, planes |
 | `roles.spec.ts` | 11 | Compras (rutas, aprobar/rechazar, servicios, solo lectura, aceptar invitación), Dirección (solo tareas, rutas), invitaciones (crear/revocar, propia, jefe, inexistente, sin sesión) |
-| `security.spec.ts` | 18 | XSS, open redirect ×4, contraseña en storage, autocomplete, `noopener`, secretos en bundle, `.gitignore`, headers, RLS/funciones/RPC/triggers en `schema.sql` |
+| `codigo.spec.ts` | 10 | ID de obra: sumarse (Compras / Dirección, formato libre), sin duplicados, ID inválido y bloqueo tras 10 fallos, acceso desactivado, jefe no puede sumarse; jefe ve, regenera y desactiva el ID; obra nueva con ID |
+| `security.spec.ts` | 19 | XSS, open redirect ×4, contraseña en storage, autocomplete, `noopener`, secretos en bundle, `.gitignore`, headers, RLS/funciones/RPC/triggers en `schema.sql` |
 | `performance.spec.ts` | 7 | LCP/CLS/DCL landing y dashboard, cambios de ruta, code splitting, tamaño de bundle, recursos 404, CPU 4× en móvil |
 | `nonfunctional.spec.ts` | 25 | Responsive 375/768/1280 en 14 pantallas, Kanban y tarjetas en móvil, axe en 10 pantallas (incl. oscuro), teclado en menús, modales, nombres accesibles, i18n EN/PT, persistencia de idioma y tema, rutas desconocidas, persistencia de datos, `localStorage` bloqueado |
 
@@ -43,7 +44,7 @@ Proyectos: `desktop` (Chrome 1366×850) y `mobile` (Pixel 7, tests `@mobile`).
 
 > Mediciones sobre build local servido por `vite preview`. En producción (CDN + compresión Brotli) los tiempos de transferencia son menores.
 
-Estabilidad: la suite se ejecutó 3 veces consecutivas sin fallas (86/86 y 172/172 con `--repeat-each=2`).
+Estabilidad: la suite se ejecutó varias veces consecutivas sin fallas (97/97; 172/172 con `--repeat-each=2` antes de sumar los tests del ID de obra).
 
 ## 7.4 Hallazgos corregidos gracias a la suite
 

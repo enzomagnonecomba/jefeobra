@@ -32,7 +32,9 @@ erDiagram
     uuid user_id FK "dueño"
     text nombre
     text estado "activa | pausada | finalizada"
-    numeric presupuesto_caja }
+    numeric presupuesto_caja
+    text codigo UK "ID para sumarse"
+    boolean acceso_por_codigo }
   OBRA_ACCESOS { uuid id PK
     uuid owner_id FK
     uuid obra_id FK "nullable"
@@ -67,8 +69,9 @@ Todas las tablas operativas comparten:
 | Tabla | Propósito | Columnas destacadas |
 |---|---|---|
 | `profiles` | Datos del usuario | `nombre`, `estudio`, `rol` (bloqueado tras el alta) |
-| `obras` | Espacio de trabajo | `nombre`, `direccion`, `estado`, `presupuesto_caja` |
-| `obra_accesos` | Invitaciones y accesos compartidos | `owner_id`, `obra_id` (NULL = todas), `member_id`, `rol`, `token` (18 bytes hex), `estado`, `accepted_at` |
+| `obras` | Espacio de trabajo | `nombre`, `direccion`, `estado`, `presupuesto_caja`, `codigo` (ID único de 8 caracteres), `acceso_por_codigo` |
+| `codigo_intentos` | Intentos fallidos de sumarse con ID (anti fuerza bruta). Sin acceso para usuarios. | `user_id`, `created_at` |
+| `obra_accesos` | Invitaciones y accesos compartidos (por link o por ID) | `owner_id`, `obra_id` (NULL = todas), `member_id`, `rol`, `token` (18 bytes hex), `estado`, `accepted_at` |
 
 ### Operativas (todas con `user_id` + `obra_id`)
 
@@ -108,6 +111,8 @@ Se eligió `jsonb` para ítems y acuerdos porque se leen y escriben siempre junt
 | El rol no cambia tras el registro | Trigger `trg_lock_rol` → `lock_rol()` |
 | Un miembro solo modifica `estado` | Trigger `trg_miembro_estado` → `miembro_solo_estado()` en `pedidos`, `fletes`, `volquetes` |
 | Aceptar invitación copia el rol del perfil | RPC `aceptar_invitacion(token)` |
+| El ID de obra lo genera la base y no se edita a mano | Trigger `trg_codigo_obra` → `codigo_obra_guard()`; cambio solo vía RPC `regenerar_codigo_obra` |
+| Sumarse con ID crea un acceso con el rol del perfil, máx. 10 fallos / 10 min | RPC `unirse_por_codigo(codigo)` |
 | `updated_at` automático | Trigger `trg_updated_at` → `set_updated_at()` |
 
 ## 3.5 Reglas calculadas en el cliente
@@ -124,8 +129,9 @@ Se eligió `jsonb` para ítems y acuerdos porque se leen y escriben siempre junt
 
 | Archivo | Contenido | Depende de |
 |---|---|---|
-| `schema.sql` | Esquema completo actual (incluye 002 y 003). Para instalaciones nuevas. | — |
+| `schema.sql` | Esquema completo actual (incluye 002, 003 y 004). Para instalaciones nuevas. | — |
 | `migrations/002_panel_estudio.sql` | `obra_accesos`, políticas de lectura compartida, RPCs de invitación. | Esquema base |
 | `migrations/003_roles.sql` | `profiles.rol`, `rol_en_obra()`, políticas por rol, estado `rechazado`, trigger genérico de estado. | 002 |
+| `migrations/004_codigo_obra.sql` | `obras.codigo` / `acceso_por_codigo`, `codigo_intentos`, RPCs `unirse_por_codigo` y `regenerar_codigo_obra`. | 003 |
 
 Todas son **idempotentes** (`if not exists`, `drop policy if exists`, `create or replace`). El bloque *RESET* al inicio de `schema.sql` está comentado y borra datos: solo para empezar de cero.

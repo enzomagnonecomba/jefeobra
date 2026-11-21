@@ -13,8 +13,8 @@ Centralizar en una sola herramienta, usable desde el celular en la obra, la oper
 | Rol | Quién es | Cómo llega | Alcance |
 |---|---|---|---|
 | **Jefe de obra** (`jefe_obra`) | Responsable de la obra en sitio | Se registra eligiendo el rol | Todas sus obras y módulos. Invita a otros (plan Estudio). |
-| **Compras** (`compras`) | Administrativo del estudio | Se registra y acepta un link de invitación | Obras compartidas: ve resumen, **aprueba/rechaza pedidos**, **cambia estado** de fletes y volquetes. Nada más. |
-| **Dirección de obra** (`direccion_obra`) | Arquitecto / director del estudio | Se registra y acepta un link de invitación | Obras compartidas: **solo el resumen de tareas** (lectura). |
+| **Compras** (`compras`) | Administrativo del estudio | Se registra y acepta un link de invitación **o escribe el ID de la obra** | Obras compartidas: ve resumen, **aprueba/rechaza pedidos**, **cambia estado** de fletes y volquetes. Nada más. |
+| **Dirección de obra** (`direccion_obra`) | Arquitecto / director del estudio | Se registra y acepta un link de invitación **o escribe el ID de la obra** | Obras compartidas: **solo el resumen de tareas** (lectura). |
 | **Visitante** | Cualquiera | Landing pública | Landing, planes, registro. |
 
 ## 1.4 Alcance funcional
@@ -39,7 +39,7 @@ Centralizar en una sola herramienta, usable desde el celular en la obra, la oper
 | | Minutas | Actas con asistentes, temas y acuerdos con responsable y fecha; imprimibles. |
 | Servicios | Fletes · Volquetes · Seguros | Agenda y estados; alertas de retiro y de vencimiento de pólizas (≤ 30 días). |
 | Recursos | EPP · Herramientas | Entregas por operario con recambio; inventario y asignación. |
-| Estudio | Equipo | Invitaciones por link (plan Estudio), revocación, rol de cada conectado. |
+| Estudio | Equipo | Invitaciones por link y **ID de obra** (plan Estudio): copiar, regenerar, activar/desactivar; revocación y rol de cada conectado. |
 | | Panel de gestión | Vista de obras compartidas (para roles invitados). |
 | Cuenta | Mis obras · Planes | Alta/edición de obras y presupuesto; selección de plan y días de prueba. |
 

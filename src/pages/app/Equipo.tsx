@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Users, Link2, Copy, Check, Trash2, Lock, Gem, Send, Clock, UserCheck, Share2 } from 'lucide-react';
+import { Users, Link2, Copy, Check, Trash2, Lock, Gem, Send, Clock, UserCheck, Share2, Hash, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useObra } from '../../context/ObraContext';
 import { useToast } from '../../components/Toast';
@@ -9,6 +9,73 @@ import { Select } from '../../components/Select';
 import { crearInvitacion, linkInvitacion, listarInvitaciones, revocarAcceso, type Acceso } from '../../lib/estudio';
 import { t } from '../../i18n';
 import { rolLabel } from '../../lib/roles';
+import { CodigoObra } from '../../components/CodigoObra';
+import { formatCodigo } from '../../lib/estudio';
+import type { Obra } from '../../types';
+
+/**
+ * Compartir con el ID de la obra: alternativa al link de invitación.
+ * Compras o Dirección de obra escriben el ID en su panel y quedan conectados a esa obra.
+ */
+function SeccionCodigos() {
+  const { obras, regenerarCodigoObra, cambiarAccesoPorCodigo } = useObra();
+  const toast = useToast();
+  const [regenerar, setRegenerar] = useState<Obra | null>(null);
+
+  async function confirmarRegenerar() {
+    if (!regenerar) return;
+    try {
+      const nuevo = await regenerarCodigoObra(regenerar.id);
+      toast.ok(t('Nuevo ID: {x}', { x: formatCodigo(nuevo) }));
+    } catch (e) { toast.error((e as Error).message); }
+    setRegenerar(null);
+  }
+
+  async function toggle(o: Obra) {
+    try {
+      await cambiarAccesoPorCodigo(o.id, o.acceso_por_codigo === false);
+      toast.ok(o.acceso_por_codigo === false ? t('Acceso con ID activado') : t('Acceso con ID desactivado'));
+    } catch (e) { toast.error((e as Error).message); }
+  }
+
+  return (
+    <Card className="mb-5 p-5 sm:p-6">
+      <h2 className="mb-1 flex items-center gap-2 font-bold"><Hash size={18} className="text-lilac" /> {t('Compartir con el ID de la obra')}</h2>
+      <p className="mb-4 text-sm text-muted">{t('Pasale el ID a Compras o a Dirección de obra: lo escriben en su panel y quedan conectados a esa obra. Si se filtra, generá uno nuevo.')}</p>
+      <ul className="divide-y divide-line">
+        {obras.map((o) => {
+          const activo = o.acceso_por_codigo !== false;
+          return (
+            <li key={o.id} className="flex flex-wrap items-center gap-3 py-3">
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold">{o.nombre}</p>
+                {o.direccion && <p className="truncate text-xs text-muted">{o.direccion}</p>}
+              </div>
+              <CodigoObra codigo={o.codigo} activo={activo} />
+              <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-semibold text-muted">
+                <input type="checkbox" className="peer sr-only" checked={activo} onChange={() => toggle(o)} />
+                <span className="relative h-5 w-9 rounded-full bg-slate-300 transition peer-checked:bg-sage peer-focus-visible:ring-4 peer-focus-visible:ring-lilac-bg after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition peer-checked:after:translate-x-4" />
+                {activo ? t('Activo') : t('Desactivado')}
+              </label>
+              <IconButton icon={RefreshCw} label={t('Generar un ID nuevo')} onClick={() => setRegenerar(o)} />
+            </li>
+          );
+        })}
+      </ul>
+      <Modal open={!!regenerar} onClose={() => setRegenerar(null)} title={t('Generar un ID nuevo')}>
+        {regenerar && (
+          <div className="space-y-5">
+            <p className="text-sm">{t('El ID actual de «{x}» dejará de funcionar. Quienes ya se sumaron mantienen el acceso (podés revocarlo abajo).', { x: regenerar.nombre })}</p>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setRegenerar(null)}>{t('Cancelar')}</Button>
+              <Button icon={RefreshCw} onClick={confirmarRegenerar}>{t('Generar ID nuevo')}</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </Card>
+  );
+}
 
 const TODAS = '__todas';
 
@@ -111,6 +178,8 @@ export default function Equipo() {
   return (
     <div>
       <PageHeader title={t('Equipo del estudio')} subtitle={t('Conectá a los administrativos del estudio con tus obras')} icon={Users} tone="lilac" />
+
+      <SeccionCodigos />
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,380px)_1fr]">
         {/* Nueva invitación */}

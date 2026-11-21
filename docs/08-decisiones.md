@@ -85,6 +85,15 @@ Formato: contexto → decisión → consecuencias. Estado: ✅ vigente.
 
 ---
 
+### ADR-011
+**ID de obra para sumarse, además del link** ✅
+
+- **Contexto:** compartir un link largo por WhatsApp o dictarlo por teléfono es incómodo; en obra es más práctico un código corto.
+- **Decisión:** cada obra tiene un `codigo` de 8 caracteres (alfabeto sin ambiguos) generado por la base. Compras y Dirección de obra se suman con la RPC `unirse_por_codigo`, con límite de 10 fallos cada 10 minutos. El jefe puede regenerarlo o desactivarlo.
+- **Consecuencias:** + Alta en segundos, fácil de dictar. − Menos entropía que el token de invitación (aceptado con rate limiting); quienes ven la obra ven su ID. Evolución posible: aprobación del jefe antes de activar el acceso.
+
+---
+
 ### ADR-010
 **Tests E2E contra build demo** ✅
 

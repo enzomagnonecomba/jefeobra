@@ -26,7 +26,7 @@
 | # | Limitación | Impacto | Mitigación / plan |
 |---|---|---|---|
 | L1 | Planes no se cobran ni se aplican en backend | Restricciones de plan evitables por usuarios técnicos | ADR-007: tabla de suscripciones + webhook de pagos |
-| L2 | Link de invitación usable por cualquiera que lo tenga (una vez) | Riesgo si se filtra | Revocación; futuro: vincular al email y verificarlo, expiración |
+| L2 | Link de invitación e ID de obra usables por cualquiera que los tenga | Riesgo si se filtran | Revocación, regenerar/desactivar ID, límite de intentos; futuro: aprobación del jefe, expiración |
 | L3 | Sin pruebas de RLS contra base real | Una regresión de políticas podría pasar los tests | Proyecto Supabase de staging + tests por rol |
 | L4 | Sin prueba de carga | Capacidad de usuarios simultáneos no medida | k6 contra staging (escenarios por rol, escalones 10→200 VU) |
 | L5 | Sin adjuntos (fotos, PDF) | Remitos y planos solo como texto | Supabase Storage con políticas por obra |

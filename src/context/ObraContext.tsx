@@ -1,5 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import * as db from '../lib/db';
+import { hasSupabase } from '../lib/supabase';
+import { codigoNuevoDemo, regenerarCodigo, setAccesoPorCodigo } from '../lib/estudio';
 import type { Obra } from '../types';
 import { useAuth } from './AuthContext';
 
@@ -11,6 +13,9 @@ interface ObraCtx {
   crearObra: (o: Pick<Obra, 'nombre' | 'direccion' | 'presupuesto_caja'>) => Promise<Obra>;
   actualizarObra: (id: string, o: Partial<Obra>) => Promise<void>;
   eliminarObra: (id: string) => Promise<void>;
+  /** ID de obra: generar uno nuevo y activar/desactivar el acceso con ID. */
+  regenerarCodigoObra: (id: string) => Promise<string>;
+  cambiarAccesoPorCodigo: (id: string, activo: boolean) => Promise<void>;
 }
 
 const ObraContext = createContext<ObraCtx | null>(null);
@@ -28,7 +33,11 @@ export function ObraProvider({ children }: { children: ReactNode }) {
     if (!user) { setObras([]); setLoading(false); return; }
     setLoading(true);
     try {
-      const data = await db.list<Obra>('obras', {}, 'created_at');
+      let data = await db.list<Obra>('obras', {}, 'created_at');
+      // Modo demo: obras guardadas antes de existir el ID reciben uno.
+      if (!hasSupabase && data.some((o) => !o.codigo)) {
+        data = await Promise.all(data.map((o) => (o.codigo ? o : db.update<Obra>('obras', o.id, { codigo: codigoNuevoDemo(), acceso_por_codigo: true }))));
+      }
       // Solo obras propias: las compartidas por otros jefes se ven en el Panel del estudio.
       setObras(data.filter((o) => !o.user_id || o.user_id === user.id).reverse());
     } catch (e) {
@@ -48,7 +57,8 @@ export function ObraProvider({ children }: { children: ReactNode }) {
   };
 
   const crearObra: ObraCtx['crearObra'] = async (o) => {
-    const nueva = await db.insert<Obra>('obras', { ...o, estado: 'activa' });
+    // Con Supabase el ID lo genera la base (trigger); en demo lo generamos acá.
+    const nueva = await db.insert<Obra>('obras', { ...o, estado: 'activa', ...(hasSupabase ? {} : { codigo: codigoNuevoDemo(), acceso_por_codigo: true }) });
     setObras((prev) => [...prev, nueva]);
     seleccionar(nueva.id);
     return nueva;
@@ -59,13 +69,24 @@ export function ObraProvider({ children }: { children: ReactNode }) {
     setObras((prev) => prev.map((x) => (x.id === id ? { ...x, ...upd } : x)));
   };
 
+  const regenerarCodigoObra = async (id: string) => {
+    const codigo = await regenerarCodigo(id);
+    setObras((prev) => prev.map((x) => (x.id === id ? { ...x, codigo } : x)));
+    return codigo;
+  };
+
+  const cambiarAccesoPorCodigo = async (id: string, activo: boolean) => {
+    await setAccesoPorCodigo(id, activo);
+    setObras((prev) => prev.map((x) => (x.id === id ? { ...x, acceso_por_codigo: activo } : x)));
+  };
+
   const eliminarObra = async (id: string) => {
     await db.remove('obras', id);
     setObras((prev) => prev.filter((x) => x.id !== id));
   };
 
   return (
-    <ObraContext.Provider value={{ obras, obraActiva, loading, seleccionar, crearObra, actualizarObra, eliminarObra }}>
+    <ObraContext.Provider value={{ obras, obraActiva, loading, seleccionar, crearObra, actualizarObra, eliminarObra, regenerarCodigoObra, cambiarAccesoPorCodigo }}>
       {children}
     </ObraContext.Provider>
   );

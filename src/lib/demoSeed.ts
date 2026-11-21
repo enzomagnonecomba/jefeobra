@@ -10,8 +10,8 @@ const base = (i: number, days = -i) => ({ id: `demo-${i}-${Math.abs(days)}`, use
 
 export const demoSeed: Record<string, unknown[]> = {
   obras: [
-    { id: O, user_id: 'demo-user', nombre: 'Edificio Río 1820', direccion: 'Av. del Río 1820', estado: 'activa', presupuesto_caja: 500000, created_at: ts(-30) },
-    { id: 'demo-obra-2', user_id: 'demo-user', nombre: 'Casa Lago Norte', direccion: 'Ruta 9 km 14', estado: 'activa', presupuesto_caja: 200000, created_at: ts(-20) },
+    { id: O, user_id: 'demo-user', nombre: 'Edificio Río 1820', direccion: 'Av. del Río 1820', estado: 'activa', presupuesto_caja: 500000, codigo: 'RQ4M7K2P', acceso_por_codigo: true, created_at: ts(-30) },
+    { id: 'demo-obra-2', user_id: 'demo-user', nombre: 'Casa Lago Norte', direccion: 'Ruta 9 km 14', estado: 'activa', presupuesto_caja: 200000, codigo: 'LGN8T3WX', acceso_por_codigo: true, created_at: ts(-20) },
   ],
   tareas: [
     { ...base(1), titulo: 'Replanteo de muros PB', descripcion: null, prioridad: 'alta', fecha_limite: d(3), etiquetas: ['Albañilería'], estado: 'en_curso', orden: 1 },
@@ -72,7 +72,7 @@ const O3 = 'demo-obra-3';
 const sh = (i: number, days = -i) => ({ id: `demo-sh-${i}`, user_id: J, obra_id: O3, created_at: ts(days) });
 const push = (table: string, ...rows: unknown[]) => { (demoSeed[table] ??= []).push(...rows); };
 
-push('obras', { id: O3, user_id: J, nombre: 'Torre Palermo', direccion: 'Gorriti 4520', estado: 'activa', presupuesto_caja: 800000, created_at: ts(-40) });
+push('obras', { id: O3, user_id: J, nombre: 'Torre Palermo', direccion: 'Gorriti 4520', estado: 'activa', presupuesto_caja: 800000, codigo: 'TPL5H9VC', acceso_por_codigo: true, created_at: ts(-40) });
 push('profiles', { id: J, nombre: 'Martín Ruiz', estudio: 'Ruiz & Asociados' });
 push('obra_accesos', {
   id: 'demo-acc-1', owner_id: J, obra_id: null, member_id: 'demo-user', rol: 'compras', nombre: 'Demo', email: 'demo@obra.local',
@@ -101,3 +101,14 @@ push('fletes',
 );
 push('volquetes', { ...sh(12), empresa: 'Volquetes Norte', numero: 'VN-88', fecha_entrega: d(-4), fecha_retiro: d(1), costo: 42000, estado: 'en_obra' });
 push('seguros', { ...sh(9), tipo: 'art', aseguradora: 'Galeno ART', poliza: 'GA-90210', vigencia_desde: d(-355), vigencia_hasta: d(8), suma_asegurada: 0 });
+
+// Obra de otro jefe (todavía no compartida) para probar "sumarse con el ID".
+push('profiles', { id: 'jefe-demo-2', nombre: 'Carla Méndez', estudio: 'Méndez Arquitectura' });
+push('obras', { id: 'demo-obra-4', user_id: 'jefe-demo-2', nombre: 'Casa Nordelta', direccion: 'Barrio Los Lagos, lote 112', estado: 'activa',
+  presupuesto_caja: 300000, codigo: 'NDT2468K', acceso_por_codigo: true, created_at: ts(-15) });
+push('tareas',
+  { id: 'demo-nd-1', user_id: 'jefe-demo-2', obra_id: 'demo-obra-4', created_at: ts(-5), titulo: 'Platea de fundación', descripcion: null, prioridad: 'alta', fecha_limite: d(4), etiquetas: ['Estructura'], estado: 'en_curso', orden: 1 },
+  { id: 'demo-nd-2', user_id: 'jefe-demo-2', obra_id: 'demo-obra-4', created_at: ts(-4), titulo: 'Pedido de aberturas', descripcion: null, prioridad: 'media', fecha_limite: d(20), etiquetas: ['Carpintería'], estado: 'por_comenzar', orden: 1 },
+);
+push('pedidos', { id: 'demo-nd-3', user_id: 'jefe-demo-2', obra_id: 'demo-obra-4', created_at: ts(-1), titulo: 'Malla sima y separadores', proveedor: null, prioridad: 'alta',
+  fecha_requerida: d(2), notas: null, estado: 'pendiente', items: [{ descripcion: 'Malla sima Q188', cantidad: 40, unidad: 'u' }] });
