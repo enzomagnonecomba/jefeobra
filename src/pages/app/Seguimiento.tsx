@@ -122,7 +122,7 @@ export default function Seguimiento() {
             const items = byCol(col);
             const meta = COLS[col];
             return (
-              <div key={col}
+              <div key={col} data-testid={`col-${col}`}
                 onDragOver={(e) => { e.preventDefault(); setOverCol(col); }}
                 onDragLeave={() => setOverCol((c) => (c === col ? null : c))}
                 onDrop={(e) => onDrop(e, col)}

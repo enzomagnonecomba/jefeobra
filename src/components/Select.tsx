@@ -48,6 +48,9 @@ export function Select<V extends string>({
   const id = useId();
 
   const selected = options.find((o) => o.value === value);
+  // El nombre accesible incluye el valor visible (WCAG 2.5.3 "label in name").
+  // Con trigger propio, el nombre sale del contenido (texto oculto + texto visible).
+  const accName = ariaLabel && !trigger ? `${ariaLabel}: ${selected?.label ?? placeholder}` : undefined;
   const selectedIdx = Math.max(0, options.findIndex((o) => o.value === value));
 
   const place = useCallback(() => {
@@ -127,11 +130,12 @@ export function Select<V extends string>({
   return (
     <>
       <button
-        ref={btnRef} type="button" aria-label={ariaLabel} aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? id : undefined}
+        ref={btnRef} type="button" aria-label={accName} aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? id : undefined}
         onClick={(e) => { e.stopPropagation(); if (open) setOpen(false); else openMenu(); }}
         onKeyDown={onKeyDown}
         className={`${base} outline-none transition focus-visible:ring-4 focus-visible:ring-lilac-bg ${open && variant === 'field' ? 'border-lilac/40 ring-4 ring-lilac-bg' : ''} ${className}`}
       >
+        {trigger && ariaLabel && <span className="sr-only">{ariaLabel}: </span>}
         {trigger ?? (
           <span className="flex min-w-0 items-center gap-2">
             {icon}

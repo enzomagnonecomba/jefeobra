@@ -2,6 +2,8 @@
 
 SaaS B2B para **jefes de obra** de estudios de arquitectura: tareas, pedidos, caja chica, jornales, adicionales, manifiesto, minutas, fletes, volquetes, seguros, EPP y herramientas.
 
+📚 **Documentación técnica completa:** [`docs/`](docs/README.md) — visión, arquitectura, modelo de datos, seguridad, frontend, despliegue, testing, ADRs y roadmap.
+
 **Stack:** React 19 + Vite + TypeScript · Tailwind CSS v4 · Framer Motion · Lucide React · Supabase (Postgres + Auth + RLS).
 
 ## Desarrollo local
@@ -63,6 +65,29 @@ t('Te quedan {n} días de prueba gratuita', { n: 3 });
 - Para un texto nuevo: envolvelo en `t(...)` y agregá la traducción en `src/i18n/en.ts` y `src/i18n/pt.ts`. Si falta, se muestra en español.
 - El idioma se detecta del navegador la primera vez y se guarda al cambiarlo con el selector (ES/EN/PT) del encabezado.
 - Los datos que carga cada usuario (nombres de obras, conceptos, etc.) no se traducen.
+
+## Tests E2E (Playwright)
+
+La suite corre contra un **build de producción en modo demo** (sin Supabase), con datos de ejemplo aislados por test.
+
+```bash
+npx playwright install chromium   # una sola vez
+npm run test:e2e                  # corre todo (escritorio + celular)
+npm run test:e2e:ui               # interfaz visual para depurar
+npm run test:e2e:report           # reporte HTML con capturas, trazas y métricas
+```
+
+| Archivo | Qué cubre |
+|---|---|
+| `e2e/landing.spec.ts` | Landing, secciones, CTA, precios, menú móvil |
+| `e2e/auth.spec.ts` | Rutas protegidas, login, registro con rol, `?next`, logout, recuperar contraseña |
+| `e2e/jefe.spec.ts` | Kanban, caja chica, cálculos → pedido, obras, CRUD, minutas, seguros, planes |
+| `e2e/roles.spec.ts` | Compras (aprobar/rechazar, servicios), Dirección de obra, invitaciones |
+| `e2e/security.spec.ts` | XSS, open redirect, secretos en el bundle, headers, análisis estático de RLS |
+| `e2e/performance.spec.ts` | LCP, CLS, cambios de ruta, code splitting, tamaño de bundle, CPU lenta |
+| `e2e/nonfunctional.spec.ts` | Responsive, accesibilidad (axe WCAG 2.1 AA), idiomas, modo oscuro, robustez |
+
+Las políticas RLS se validan de forma estática sobre `schema.sql`; para probarlas contra la base real hace falta un proyecto de Supabase de prueba.
 
 ## Deploy en Vercel
 
