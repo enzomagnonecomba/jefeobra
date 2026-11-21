@@ -64,3 +64,35 @@ export const demoSeed: Record<string, unknown[]> = {
     { ...base(22), nombre: 'Amoladora 230mm', categoria: 'Eléctricas', cantidad: 2, asignado_a: 'Juan Pérez', estado: 'operativa' },
   ],
 };
+
+// ---------- Panel del estudio (demo) ----------
+// Obra de otro jefe de obra compartida con el usuario demo como administrativo.
+const J = 'jefe-demo';
+const O3 = 'demo-obra-3';
+const sh = (i: number, days = -i) => ({ id: `demo-sh-${i}`, user_id: J, obra_id: O3, created_at: ts(days) });
+const push = (table: string, ...rows: unknown[]) => { (demoSeed[table] ??= []).push(...rows); };
+
+push('obras', { id: O3, user_id: J, nombre: 'Torre Palermo', direccion: 'Gorriti 4520', estado: 'activa', presupuesto_caja: 800000, created_at: ts(-40) });
+push('profiles', { id: J, nombre: 'Martín Ruiz', estudio: 'Ruiz & Asociados' });
+push('obra_accesos', {
+  id: 'demo-acc-1', owner_id: J, obra_id: null, member_id: 'demo-user', nombre: 'Demo', email: 'demo@obra.local',
+  token: 'demo-token-compartido', estado: 'activo', created_at: ts(-3), accepted_at: ts(-3),
+});
+push('pedidos',
+  { ...sh(1), titulo: 'Hierro para losa nivel 4', proveedor: 'Acindar', prioridad: 'critica', fecha_requerida: d(1), notas: 'Descargar por Gorriti', estado: 'pendiente',
+    items: [{ descripcion: 'Hierro ADN 420 Ø12', cantidad: 180, unidad: 'barra' }, { descripcion: 'Alambre de atar', cantidad: 20, unidad: 'kg' }] },
+  { ...sh(2), titulo: 'Cerámicos baños piso 2', proveedor: 'Cerámica San Lorenzo', prioridad: 'media', fecha_requerida: d(6), notas: null, estado: 'pendiente',
+    items: [{ descripcion: 'Porcellanato 60x60 gris', cantidad: 96, unidad: 'm²' }] },
+  { ...sh(3), titulo: 'Bolsas de cemento', proveedor: 'Corralón Palermo', prioridad: 'alta', fecha_requerida: d(-1), notas: null, estado: 'en_camino',
+    items: [{ descripcion: 'Cemento portland', cantidad: 60, unidad: 'bolsa' }] },
+);
+push('tareas',
+  { ...sh(4), titulo: 'Encofrado losa nivel 4', descripcion: null, prioridad: 'alta', fecha_limite: d(2), etiquetas: ['Estructura'], estado: 'en_curso', orden: 1 },
+  { ...sh(5), titulo: 'Mampostería piso 3', descripcion: null, prioridad: 'media', fecha_limite: d(9), etiquetas: ['Albañilería'], estado: 'terminada', orden: 1 },
+  { ...sh(6), titulo: 'Cañerías pluviales', descripcion: null, prioridad: 'media', fecha_limite: d(12), etiquetas: ['Sanitaria'], estado: 'por_comenzar', orden: 1 },
+);
+push('caja_movimientos',
+  { ...sh(7), fecha: d(-6), tipo: 'egreso', categoria: 'ferreteria', concepto: 'Discos y mechas', monto: 42000 },
+  { ...sh(8), fecha: d(-2), tipo: 'egreso', categoria: 'viaticos', concepto: 'Combustible', monto: 28000 },
+);
+push('seguros', { ...sh(9), tipo: 'art', aseguradora: 'Galeno ART', poliza: 'GA-90210', vigencia_desde: d(-355), vigencia_hasta: d(8), suma_asegurada: 0 });

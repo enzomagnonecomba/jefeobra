@@ -91,3 +91,20 @@ export type TableName =
   | 'seguros'
   | 'epp_entregas'
   | 'herramientas';
+
+export interface Seguro extends Row {
+  tipo: string;
+  aseguradora: string;
+  poliza: string | null;
+  vigencia_desde: string | null;
+  vigencia_hasta: string;
+  suma_asegurada: number;
+}
+
+export interface Adicional extends Row {
+  fecha: string;
+  descripcion: string;
+  motivo: string | null;
+  costo_estimado: number;
+  estado: 'propuesto' | 'aprobado' | 'rechazado';
+}

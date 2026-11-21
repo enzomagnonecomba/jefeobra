@@ -25,6 +25,10 @@ function Input({ icon: Icon, ...rest }: { icon: typeof Mail } & React.InputHTMLA
 export default function Login() {
   const { user, signIn, signUp, resetPassword, resendConfirmation } = useAuth();
   const location = useLocation();
+  // Volver a donde venía (ej. una invitación). Solo rutas internas.
+  const rawNext = new URLSearchParams(location.search).get('next') ?? '';
+  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/app';
+  const qs = next !== '/app' ? `?next=${encodeURIComponent(next)}` : '';
   const navigate = useNavigate();
   const [modo, setModo] = useState<Modo>(location.pathname === '/registro' ? 'registro' : 'login');
   const plan = PLANES.find((p) => p.id === new URLSearchParams(location.search).get('plan')) ?? PLANES[1];
@@ -36,11 +40,11 @@ export default function Login() {
   const [error, setError] = useState<{ text: string; action?: 'login' | 'registro' | 'reenviar' } | null>(null);
   const [busy, setBusy] = useState(false);
 
-  if (user) return <Navigate to="/app" replace />;
+  if (user) return <Navigate to={next} replace />;
 
   const cambiar = (m: Modo) => {
     setModo(m); setError(null); setMsg(null);
-    if (m !== 'recuperar') navigate(m === 'registro' ? '/registro' : '/login', { replace: true });
+    if (m !== 'recuperar') navigate((m === 'registro' ? '/registro' : '/login') + qs, { replace: true });
   };
 
   async function onSubmit(e: FormEvent) {
