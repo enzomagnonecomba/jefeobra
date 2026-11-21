@@ -1,6 +1,7 @@
 import { hasSupabase, supabase } from './supabase';
 import * as db from './db';
-import type { Adicional, CajaMovimiento, Obra, Pedido, Seguro, Tarea } from '../types';
+import type { Adicional, CajaMovimiento, Flete, Obra, Pedido, Seguro, Tarea, Volquete } from '../types';
+import type { Rol } from './roles';
 
 /**
  * Panel de gestión del estudio (plan Estudio).
@@ -14,6 +15,7 @@ export interface Acceso {
   owner_id: string;
   obra_id: string | null; // null = todas las obras del jefe
   member_id: string | null;
+  rol: 'compras' | 'direccion_obra';
   nombre: string | null;
   email: string | null;
   token: string;
@@ -31,9 +33,13 @@ export interface InfoInvitacion {
   estado: 'pendiente' | 'activo';
   es_propia: boolean;
   es_mia: boolean;
+  mi_rol: Rol | null;
 }
 
 export interface Perfil { id: string; nombre: string | null; estudio: string | null }
+
+/** Rol del usuario demo (se guarda en el navegador al registrarse en modo demo). */
+const demoRol = (): Rol => { try { return (JSON.parse(localStorage.getItem('mock_meta') ?? '{}').rol as Rol) ?? 'jefe_obra'; } catch { return 'jefe_obra'; } };
 
 export const linkInvitacion = (token: string) => `${window.location.origin}/invitacion/${token}`;
 
@@ -61,7 +67,7 @@ export async function verInvitacion(token: string): Promise<InfoInvitacion | nul
     const obra = db.demoStore.read<Obra>('obras').find((o) => o.id === a.obra_id);
     return {
       id: a.id, owner_nombre: owner?.nombre ?? null, owner_estudio: owner?.estudio ?? null, obra_nombre: obra?.nombre ?? null,
-      todas: a.obra_id === null, estado: a.estado, es_propia: a.owner_id === 'demo-user', es_mia: a.member_id === 'demo-user',
+      todas: a.obra_id === null, estado: a.estado, es_propia: a.owner_id === 'demo-user', es_mia: a.member_id === 'demo-user', mi_rol: demoRol(),
     };
   }
   const { data, error } = await supabase.rpc('ver_invitacion', { p_token: token });
@@ -76,8 +82,9 @@ export async function aceptarInvitacion(token: string): Promise<void> {
     if (!a) throw new Error('invitacion_invalida');
     if (a.owner_id === 'demo-user') throw new Error('invitacion_propia');
     if (a.estado === 'activo' && a.member_id !== 'demo-user') throw new Error('invitacion_usada');
+    if (demoRol() === 'jefe_obra') throw new Error('rol_no_admitido');
     db.demoStore.write('obra_accesos', rows.map((x) => (x.id === a.id
-      ? { ...x, member_id: 'demo-user', estado: 'activo', accepted_at: new Date().toISOString(), email: x.email ?? 'demo@obra.local' }
+      ? { ...x, member_id: 'demo-user', rol: demoRol() as Acceso['rol'], estado: 'activo', accepted_at: new Date().toISOString(), email: x.email ?? 'demo@obra.local' }
       : x)));
     return;
   }
@@ -100,10 +107,12 @@ export interface DatosPanel {
   caja: CajaMovimiento[];
   seguros: Seguro[];
   adicionales: Adicional[];
+  fletes: Flete[];
+  volquetes: Volquete[];
 }
 
 /** Carga todo lo que el administrativo puede ver de las obras compartidas con él. */
-export async function cargarPanel(memberId: string): Promise<DatosPanel> {
+export async function cargarPanel(memberId: string, rol: Rol): Promise<DatosPanel> {
   const accesos = await misAccesos(memberId);
   const todas = await db.list<Obra>('obras', {}, 'nombre', true);
   // Con Supabase, RLS ya devuelve solo las obras compartidas (más las propias).
@@ -113,13 +122,18 @@ export async function cargarPanel(memberId: string): Promise<DatosPanel> {
   const ids = obras.map((o) => o.id);
   const ownerIds = [...new Set(obras.map((o) => o.user_id!).filter(Boolean))];
 
-  const [pedidos, tareas, caja, seguros, adicionales, perfiles] = await Promise.all([
-    db.listIn<Pedido>('pedidos', 'obra_id', ids),
+  // Dirección de obra solo accede a tareas; Compras a pedidos, servicios y resumen (igual que RLS).
+  const compras = rol === 'compras';
+  const solo = <T,>(ok: boolean, q: () => Promise<T[]>) => (ok ? q() : Promise.resolve([] as T[]));
+  const [pedidos, tareas, caja, seguros, adicionales, fletes, volquetes, perfiles] = await Promise.all([
+    solo(compras, () => db.listIn<Pedido>('pedidos', 'obra_id', ids)),
     db.listIn<Tarea>('tareas', 'obra_id', ids),
-    db.listIn<CajaMovimiento>('caja_movimientos', 'obra_id', ids, 'fecha'),
-    db.listIn<Seguro>('seguros', 'obra_id', ids),
-    db.listIn<Adicional>('adicionales', 'obra_id', ids),
+    solo(compras, () => db.listIn<CajaMovimiento>('caja_movimientos', 'obra_id', ids, 'fecha')),
+    solo(compras, () => db.listIn<Seguro>('seguros', 'obra_id', ids)),
+    solo(compras, () => db.listIn<Adicional>('adicionales', 'obra_id', ids)),
+    solo(compras, () => db.listIn<Flete>('fletes', 'obra_id', ids, 'fecha')),
+    solo(compras, () => db.listIn<Volquete>('volquetes', 'obra_id', ids)),
     db.listIn<Perfil>('profiles', 'id', ownerIds),
   ]);
-  return { obras, jefes: Object.fromEntries(perfiles.map((p) => [p.id, p])), pedidos, tareas, caja, seguros, adicionales };
+  return { obras, jefes: Object.fromEntries(perfiles.map((p) => [p.id, p])), pedidos, tareas, caja, seguros, adicionales, fletes, volquetes };
 }

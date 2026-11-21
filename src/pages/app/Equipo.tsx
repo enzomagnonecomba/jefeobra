@@ -8,6 +8,7 @@ import { Badge, Button, Card, EmptyState, Field, IconButton, Modal, PageHeader, 
 import { Select } from '../../components/Select';
 import { crearInvitacion, linkInvitacion, listarInvitaciones, revocarAcceso, type Acceso } from '../../lib/estudio';
 import { t } from '../../i18n';
+import { rolLabel } from '../../lib/roles';
 
 const TODAS = '__todas';
 
@@ -115,7 +116,11 @@ export default function Equipo() {
         {/* Nueva invitación */}
         <Card className="h-fit p-5 sm:p-6">
           <h2 className="mb-1 flex items-center gap-2 font-bold"><Link2 size={18} className="text-lilac" /> {t('Invitar administrativo')}</h2>
-          <p className="mb-5 text-sm text-muted">{t('Generá un link y compartilo. Quien lo abra podrá ver el resumen y los pedidos de las obras elegidas, y cambiar el estado de los pedidos.')}</p>
+          <p className="mb-5 text-sm text-muted">{t('Generá un link y compartilo. Lo que puede hacer cada persona depende del rol de su cuenta:')}</p>
+          <ul className="-mt-3 mb-5 space-y-1.5 text-xs text-muted">
+            <li><b className="text-peach">{t('Compras')}</b> · {t('aprueba o rechaza pedidos y gestiona fletes y volquetes.')}</li>
+            <li><b className="text-lilac">{t('Dirección de obra')}</b> · {t('solo ve el resumen de tareas.')}</li>
+          </ul>
           <form onSubmit={onSubmit} className="space-y-4">
             <Field label={t('Nombre (opcional)')}>
               <input className="field" placeholder={t('Ej. Laura — Compras')} value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} />
@@ -154,7 +159,7 @@ export default function Equipo() {
                                 <p className="truncate font-semibold">{a.nombre ?? a.email}</p>
                                 <p className="truncate text-xs text-muted">{a.email && a.nombre ? `${a.email} · ` : ''}{alcanceLabel(a)} · {t('desde {f}', { f: fmtDate(a.accepted_at) })}</p>
                               </div>
-                              <Badge tone="sage">{t('Activo')}</Badge>
+                              <Badge tone={a.rol === 'direccion_obra' ? 'lilac' : 'peach'}>{rolLabel(a.rol)}</Badge>
                               <IconButton icon={Trash2} label={t('Revocar acceso')} onClick={() => setRevocar(a)} />
                             </Card>
                           </motion.div>

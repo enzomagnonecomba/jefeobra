@@ -1,13 +1,16 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase, hasSupabase } from '../lib/supabase';
+import { rolDe, type Rol } from '../lib/roles';
 
 interface AuthCtx {
   user: User | null;
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, nombre: string, estudio: string, plan?: string) => Promise<{ needsConfirmation: boolean }>;
+  signUp: (email: string, password: string, nombre: string, estudio: string, plan?: string, rol?: Rol) => Promise<{ needsConfirmation: boolean }>;
+  /** Rol elegido al registrarse (jefe de obra por defecto). */
+  rol: Rol;
   /** Guarda el plan elegido en los metadatos del usuario (todavía sin cobro). */
   setPlan: (plan: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -16,7 +19,11 @@ interface AuthCtx {
 }
 
 const AuthContext = createContext<AuthCtx | null>(null);
-const MOCK_USER = { id: 'demo-user', email: 'demo@obra.local', created_at: new Date().toISOString(), user_metadata: {} } as unknown as User;
+// Modo demo: los metadatos (rol, plan, nombre) se guardan en el navegador para poder probar cada rol.
+const META_KEY = 'mock_meta';
+const readMeta = (): Record<string, string> => { try { return JSON.parse(localStorage.getItem(META_KEY) ?? '{}'); } catch { return {}; } };
+const writeMeta = (m: Record<string, string>) => { try { localStorage.setItem(META_KEY, JSON.stringify(m)); } catch { /* noop */ } };
+const mockUser = () => ({ id: 'demo-user', email: 'demo@obra.local', created_at: new Date().toISOString(), user_metadata: readMeta() }) as unknown as User;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -27,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!hasSupabase) {
       let logged = false;
       try { logged = Boolean(localStorage.getItem('mock_login')); } catch { /* noop */ }
-      setUser(logged ? MOCK_USER : null);
+      setUser(logged ? mockUser() : null);
       setLoading(false);
       return;
     }
@@ -44,17 +51,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    if (!hasSupabase) { try { localStorage.setItem('mock_login', '1'); } catch { /* noop */ } setUser(MOCK_USER); return; }
+    if (!hasSupabase) { try { localStorage.setItem('mock_login', '1'); } catch { /* noop */ } setUser(mockUser()); return; }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
   };
 
-  const signUp = async (email: string, password: string, nombre: string, estudio: string, plan = 'profesional') => {
-    if (!hasSupabase) { await signIn(email, password); return { needsConfirmation: false }; }
+  const signUp = async (email: string, password: string, nombre: string, estudio: string, plan = 'profesional', rol: Rol = 'jefe_obra') => {
+    if (!hasSupabase) { writeMeta({ nombre, estudio, plan, rol }); await signIn(email, password); return { needsConfirmation: false }; }
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { nombre, estudio, plan }, emailRedirectTo: `${window.location.origin}/app` },
+      options: { data: { nombre, estudio, plan, rol }, emailRedirectTo: `${window.location.origin}/app` },
     });
     if (error) throw error;
     // Con confirmación de email activa, Supabase no devuelve error si el email ya
@@ -66,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const setPlan = async (plan: string) => {
-    if (!hasSupabase) { setUser((u) => (u ? ({ ...u, user_metadata: { ...u.user_metadata, plan } } as User) : u)); return; }
+    if (!hasSupabase) { writeMeta({ ...readMeta(), plan }); setUser(mockUser()); return; }
     const { data, error } = await supabase.auth.updateUser({ data: { plan } });
     if (error) throw error;
     setUser(data.user);
@@ -96,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, setPlan, resetPassword, resendConfirmation, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, rol: rolDe(user), signIn, signUp, setPlan, resetPassword, resendConfirmation, signOut }}>
       {children}
     </AuthContext.Provider>
   );

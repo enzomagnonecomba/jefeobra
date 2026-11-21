@@ -35,7 +35,7 @@ export interface Tarea extends Row {
 }
 
 // ---------- Pedidos ----------
-export const PEDIDO_ESTADOS = ['pendiente', 'aprobado', 'en_camino', 'entregado'] as const;
+export const PEDIDO_ESTADOS = ['pendiente', 'aprobado', 'en_camino', 'entregado', 'rechazado'] as const;
 export type PedidoEstado = (typeof PEDIDO_ESTADOS)[number];
 
 export interface PedidoItem {
@@ -107,4 +107,25 @@ export interface Adicional extends Row {
   motivo: string | null;
   costo_estimado: number;
   estado: 'propuesto' | 'aprobado' | 'rechazado';
+}
+
+export const FLETE_ESTADOS = ['programado', 'en_transito', 'realizado', 'cancelado'] as const;
+export interface Flete extends Row {
+  fecha: string;
+  origen: string;
+  destino: string;
+  carga: string | null;
+  transportista: string | null;
+  costo: number;
+  estado: (typeof FLETE_ESTADOS)[number];
+}
+
+export const VOLQUETE_ESTADOS = ['solicitado', 'en_obra', 'recambio', 'retirado'] as const;
+export interface Volquete extends Row {
+  empresa: string;
+  numero: string | null;
+  fecha_entrega: string | null;
+  fecha_retiro: string | null;
+  costo: number;
+  estado: (typeof VOLQUETE_ESTADOS)[number];
 }

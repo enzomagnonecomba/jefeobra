@@ -19,6 +19,7 @@ export const ESTADO_PEDIDO: Record<PedidoEstado, { label: string; tone: Tone }> 
   aprobado: { get label() { return t('Aprobado'); }, tone: 'sage' },
   en_camino: { get label() { return t('En camino'); }, tone: 'sky' },
   entregado: { get label() { return t('Entregado'); }, tone: 'lilac' },
+  rechazado: { get label() { return t('Rechazado'); }, tone: 'slate' },
 };
 
 const UNIDADES = ['u', 'm', 'm²', 'm³', 'kg', 'tn', 'bolsa', 'barra', 'l', 'rollo', 'caja'];

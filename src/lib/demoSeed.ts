@@ -75,7 +75,7 @@ const push = (table: string, ...rows: unknown[]) => { (demoSeed[table] ??= []).p
 push('obras', { id: O3, user_id: J, nombre: 'Torre Palermo', direccion: 'Gorriti 4520', estado: 'activa', presupuesto_caja: 800000, created_at: ts(-40) });
 push('profiles', { id: J, nombre: 'Martín Ruiz', estudio: 'Ruiz & Asociados' });
 push('obra_accesos', {
-  id: 'demo-acc-1', owner_id: J, obra_id: null, member_id: 'demo-user', nombre: 'Demo', email: 'demo@obra.local',
+  id: 'demo-acc-1', owner_id: J, obra_id: null, member_id: 'demo-user', rol: 'compras', nombre: 'Demo', email: 'demo@obra.local',
   token: 'demo-token-compartido', estado: 'activo', created_at: ts(-3), accepted_at: ts(-3),
 });
 push('pedidos',
@@ -95,4 +95,9 @@ push('caja_movimientos',
   { ...sh(7), fecha: d(-6), tipo: 'egreso', categoria: 'ferreteria', concepto: 'Discos y mechas', monto: 42000 },
   { ...sh(8), fecha: d(-2), tipo: 'egreso', categoria: 'viaticos', concepto: 'Combustible', monto: 28000 },
 );
+push('fletes',
+  { ...sh(10), fecha: d(2), origen: 'Acindar Villa Constitución', destino: 'Torre Palermo', carga: 'Hierro ADN 420', transportista: 'Transportes Sur', costo: 120000, estado: 'programado' },
+  { ...sh(11), fecha: d(-3), origen: 'Corralón Palermo', destino: 'Torre Palermo', carga: 'Cemento y cal', transportista: 'Fletes Rápidos', costo: 38000, estado: 'realizado' },
+);
+push('volquetes', { ...sh(12), empresa: 'Volquetes Norte', numero: 'VN-88', fecha_entrega: d(-4), fecha_retiro: d(1), costo: 42000, estado: 'en_obra' });
 push('seguros', { ...sh(9), tipo: 'art', aseguradora: 'Galeno ART', poliza: 'GA-90210', vigencia_desde: d(-355), vigencia_hasta: d(8), suma_asegurada: 0 });

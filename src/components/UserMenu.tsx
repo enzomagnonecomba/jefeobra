@@ -5,11 +5,13 @@ import { Building2, Gem, LogOut, Moon, Sun } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { diasDePrueba } from '../lib/planes';
+import { rolLabel } from '../lib/roles';
 import { t } from '../i18n';
 
 /** Avatar con menú de cuenta: email, prueba, planes, obras, tema y cerrar sesión. */
 export function UserMenu() {
-  const { user, signOut } = useAuth();
+  const { user, rol, signOut } = useAuth();
+  const esJefe = rol === 'jefe_obra';
   const { dark, toggle } = useTheme();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -43,14 +45,15 @@ export function UserMenu() {
             <div className="px-3 pb-2 pt-2">
               <p className="truncate text-sm font-bold">{nombre}</p>
               <p className="truncate text-xs text-muted">{user?.email}</p>
+              <p className="mt-1 text-xs font-semibold text-lilac">{rolLabel(rol)}</p>
             </div>
-            <Link to="/app/planes" onClick={() => setOpen(false)} role="menuitem"
+            {esJefe && <Link to="/app/planes" onClick={() => setOpen(false)} role="menuitem"
               className="mx-1.5 mb-1.5 flex items-center gap-2 rounded-xl bg-lilac-bg px-3 py-2 text-xs font-semibold text-lilac">
               <Gem size={14} /> {trial > 0 ? t(trial === 1 ? 'Prueba gratis · {n} día' : 'Prueba gratis · {n} días', { n: trial }) : t('Prueba finalizada')}
-            </Link>
+            </Link>}
             <div className="my-1 h-px bg-line" />
-            <Link to="/app/obras" onClick={() => setOpen(false)} role="menuitem" className={item}><Building2 size={17} /> {t('Mis obras')}</Link>
-            <Link to="/app/planes" onClick={() => setOpen(false)} role="menuitem" className={item}><Gem size={17} /> {t('Planes')}</Link>
+            {esJefe && <><Link to="/app/obras" onClick={() => setOpen(false)} role="menuitem" className={item}><Building2 size={17} /> {t('Mis obras')}</Link>
+            <Link to="/app/planes" onClick={() => setOpen(false)} role="menuitem" className={item}><Gem size={17} /> {t('Planes')}</Link></>}
             <button onClick={toggle} role="menuitem" className={item}>
               {dark ? <Sun size={17} /> : <Moon size={17} />} {dark ? t('Cambiar a modo claro') : t('Cambiar a modo oscuro')}
             </button>
