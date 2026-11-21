@@ -8,6 +8,7 @@ import {
 } from '../../components/ui';
 import { PRIORIDADES, TAREA_ESTADOS, type Prioridad, type Tarea, type TareaEstado } from '../../types';
 import { t } from '../../i18n';
+import { Select } from '../../components/Select';
 
 const COLS: Record<TareaEstado, { label: string; tone: Tone; dot: string }> = {
   por_comenzar: { get label() { return t('Por comenzar'); }, tone: 'lilac', dot: 'bg-lilac' },
@@ -197,17 +198,15 @@ export default function Seguimiento() {
             <textarea className="field min-h-20" value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} />
           </Field>
           <Field label={t("Prioridad")}>
-            <select className="field" value={form.prioridad} onChange={(e) => setForm({ ...form, prioridad: e.target.value as Prioridad })}>
-              {PRIORIDADES.map((p) => <option key={p} value={p}>{PRIORIDAD_LABEL[p]}</option>)}
-            </select>
+            <Select<Prioridad> value={form.prioridad} ariaLabel={t('Prioridad')} onChange={(v) => setForm({ ...form, prioridad: v })}
+              options={PRIORIDADES.map((p) => ({ value: p, label: PRIORIDAD_LABEL[p], tone: PRIORIDAD_TONE[p] }))} />
           </Field>
           <Field label={t("Fecha límite")}>
             <input type="date" className="field" value={form.fecha_limite} onChange={(e) => setForm({ ...form, fecha_limite: e.target.value })} />
           </Field>
           <Field label={t("Estado")}>
-            <select className="field" value={form.estado} onChange={(e) => setForm({ ...form, estado: e.target.value as TareaEstado })}>
-              {TAREA_ESTADOS.map((s) => <option key={s} value={s}>{COLS[s].label}</option>)}
-            </select>
+            <Select<TareaEstado> value={form.estado} ariaLabel={t('Estado')} onChange={(v) => setForm({ ...form, estado: v })}
+              options={TAREA_ESTADOS.map((s) => ({ value: s, label: COLS[s].label, tone: COLS[s].tone }))} />
           </Field>
           <Field label={t("Etiquetas de obra (separadas por coma)")}>
             <input className="field" placeholder={t("Estructura, PB")} list="tags" value={form.etiquetas} onChange={(e) => setForm({ ...form, etiquetas: e.target.value })} />

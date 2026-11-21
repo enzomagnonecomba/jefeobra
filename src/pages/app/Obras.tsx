@@ -6,6 +6,7 @@ import { useToast } from '../../components/Toast';
 import { Badge, Button, Card, Field, Modal, PageHeader, fmtMoney } from '../../components/ui';
 import type { Obra } from '../../types';
 import { t } from '../../i18n';
+import { Select } from '../../components/Select';
 
 const ESTADO = {
   activa: { get label() { return t('Activa'); }, tone: 'sage' as const },
@@ -71,9 +72,8 @@ export default function Obras() {
           <Field label={t("Presupuesto de caja chica")}><input type="number" min={0} className="field" value={form.presupuesto_caja} onChange={(e) => setForm({ ...form, presupuesto_caja: e.target.value })} /></Field>
           {editing !== 'new' && (
             <Field label={t("Estado")}>
-              <select className="field" value={form.estado} onChange={(e) => setForm({ ...form, estado: e.target.value as Obra['estado'] })}>
-                {Object.entries(ESTADO).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-              </select>
+              <Select<Obra['estado']> value={form.estado} ariaLabel={t('Estado')} onChange={(v) => setForm({ ...form, estado: v })}
+                options={(Object.keys(ESTADO) as Obra['estado'][]).map((k) => ({ value: k, label: ESTADO[k].label, tone: ESTADO[k].tone }))} />
             </Field>
           )}
           <div className="flex justify-between pt-2">
