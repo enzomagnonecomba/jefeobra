@@ -49,6 +49,7 @@ Ejecutar en orden las migraciones que falten:
 
 1. `migrations/002_panel_estudio.sql`
 2. `migrations/003_roles.sql`
+3. `migrations/004_codigo_obra.sql`
 
 Todas son idempotentes: re-ejecutarlas no rompe nada ni borra datos.
 

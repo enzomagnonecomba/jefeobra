@@ -8,7 +8,7 @@
 | **Estado** | MVP en producción (planes sin cobro activo) |
 | **Stack** | React 19 · TypeScript 5.8 · Vite 6 · Tailwind CSS 4 · Framer Motion · Supabase (Postgres + Auth + RLS) · Vercel |
 | **Idiomas de UI** | Español (fuente) · Inglés · Portugués (BR) |
-| **Tamaño** | ~6.000 líneas TS/TSX · 25 rutas · 15 tablas · 86 tests E2E |
+| **Tamaño** | ~6.300 líneas TS/TSX · 25 rutas · 16 tablas · 97 tests E2E |
 | **Última revisión** | Noviembre 2026 |
 
 ## Índice
@@ -40,5 +40,6 @@
 | **Minuta** | Acta de reunión de obra con asistentes, temas y acuerdos. |
 | **Volquete** | Contenedor de escombros alquilado (entrega, recambio, retiro). |
 | **EPP** | Elementos de protección personal entregados a operarios. |
+| **ID de obra** | Código corto (ej. `K7Q2-X9MD`) con el que Compras o Dirección de obra se suman a una obra. |
 | **RLS** | Row Level Security de PostgreSQL: filtrado de filas por usuario aplicado por la base. |
 | **Modo demo** | Ejecución sin Supabase; los datos viven en `localStorage` del navegador. |

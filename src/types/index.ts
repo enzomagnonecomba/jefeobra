@@ -17,6 +17,9 @@ export interface Obra {
   direccion: string | null;
   estado: 'activa' | 'pausada' | 'finalizada';
   presupuesto_caja: number;
+  /** ID corto para sumarse a la obra (lo genera la base). */
+  codigo?: string;
+  acceso_por_codigo?: boolean;
   created_at?: string;
 }
 

@@ -137,3 +137,66 @@ export async function cargarPanel(memberId: string, rol: Rol): Promise<DatosPane
   ]);
   return { obras, jefes: Object.fromEntries(perfiles.map((p) => [p.id, p])), pedidos, tareas, caja, seguros, adicionales, fletes, volquetes };
 }
+
+// ---------------------------------------------------------------- ID de obra
+/** Alfabeto sin caracteres ambiguos (0/O, 1/I/L). Igual que en la base. */
+const ALFABETO = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+/** "rq4m-7k2p " → "RQ4M7K2P" */
+export const normalizarCodigo = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+/** "RQ4M7K2P" → "RQ4M-7K2P" */
+export const formatCodigo = (c?: string | null) => (c ? `${c.slice(0, 4)}-${c.slice(4)}` : '—');
+
+const codigoDemo = () => Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => ALFABETO[b % ALFABETO.length]).join('');
+
+export type ResultadoUnion = 'ok' | 'codigo_invalido' | 'demasiados_intentos' | 'rol_no_admitido' | 'propia';
+
+/** Suma al usuario actual (Compras / Dirección de obra) a la obra con ese ID. */
+export async function unirsePorCodigo(codigo: string): Promise<{ estado: ResultadoUnion; obra_nombre: string | null }> {
+  const c = normalizarCodigo(codigo);
+  if (!hasSupabase) {
+    // Emulación del RPC: mismas reglas, incluido el límite de intentos.
+    const rol = demoRol();
+    const intentos = db.demoStore.read<{ at: number }>('codigo_intentos').filter((x) => x.at > Date.now() - 600_000);
+    if (intentos.length >= 10) return { estado: 'demasiados_intentos', obra_nombre: null };
+    if (rol === 'jefe_obra') return { estado: 'rol_no_admitido', obra_nombre: null };
+    const obra = db.demoStore.read<Obra>('obras').find((o) => o.codigo === c && o.acceso_por_codigo !== false);
+    if (!obra) {
+      db.demoStore.write('codigo_intentos', [...intentos, { at: Date.now() }]);
+      return { estado: 'codigo_invalido', obra_nombre: null };
+    }
+    if (obra.user_id === 'demo-user') return { estado: 'propia', obra_nombre: obra.nombre };
+    const accesos = db.demoStore.read<Acceso>('obra_accesos');
+    const ya = accesos.some((a) => a.member_id === 'demo-user' && a.owner_id === obra.user_id && a.estado === 'activo' && (a.obra_id === null || a.obra_id === obra.id));
+    if (!ya) {
+      db.demoStore.write('obra_accesos', [...accesos, {
+        id: crypto.randomUUID(), owner_id: obra.user_id!, obra_id: obra.id, member_id: 'demo-user', rol: rol as Acceso['rol'],
+        nombre: 'Demo', email: 'demo@obra.local', token: codigoDemo(), estado: 'activo', created_at: new Date().toISOString(), accepted_at: new Date().toISOString(),
+      }]);
+    }
+    return { estado: 'ok', obra_nombre: obra.nombre };
+  }
+  const { data, error } = await supabase.rpc('unirse_por_codigo', { p_codigo: c });
+  if (error) throw error;
+  const r = (data as { estado: ResultadoUnion; obra_nombre: string | null }[])[0];
+  return { estado: r?.estado ?? 'codigo_invalido', obra_nombre: r?.obra_nombre ?? null };
+}
+
+/** Genera un ID nuevo para la obra (el anterior deja de funcionar). */
+export async function regenerarCodigo(obraId: string): Promise<string> {
+  if (!hasSupabase) {
+    const nuevo = codigoDemo();
+    await db.update<Obra>('obras', obraId, { codigo: nuevo });
+    return nuevo;
+  }
+  const { data, error } = await supabase.rpc('regenerar_codigo_obra', { p_obra: obraId });
+  if (error) throw error;
+  return data as string;
+}
+
+/** Habilita o deshabilita sumarse a la obra con el ID. */
+export const setAccesoPorCodigo = (obraId: string, activo: boolean) => db.update<Obra>('obras', obraId, { acceso_por_codigo: activo });
+
+/** Modo demo: completa el ID de obras creadas antes de esta función. */
+export const codigoNuevoDemo = codigoDemo;

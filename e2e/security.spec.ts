@@ -131,7 +131,7 @@ test.describe('Seguridad · base de datos (análisis estático de schema.sql)', 
   });
 
   test('las RPC sensibles no son ejecutables por anon', () => {
-    for (const fn of ['ver_invitacion', 'aceptar_invitacion', 'rol_en_obra']) {
+    for (const fn of ['ver_invitacion', 'aceptar_invitacion', 'rol_en_obra', 'unirse_por_codigo', 'regenerar_codigo_obra', 'generar_codigo_obra']) {
       expect(sql, fn).toMatch(new RegExp(`revoke all on function public\\.${fn}\\([^)]*\\) from public, anon`));
     }
   });
@@ -140,6 +140,17 @@ test.describe('Seguridad · base de datos (análisis estático de schema.sql)', 
     expect(sql).toMatch(/create trigger trg_lock_rol before update on profiles/);
     expect(sql).toMatch(/create or replace function public\.lock_user_id\(\)/);
     expect(sql).toMatch(/revoke update on obra_accesos from authenticated/);
+  });
+
+  test('ID de obra: lo genera la base, no se edita a mano y tiene límite de intentos', () => {
+    expect(sql).toMatch(/create trigger trg_codigo_obra before insert or update on obras/);
+    expect(sql).toMatch(/new\.codigo := public\.generar_codigo_obra\(\)/);
+    expect(sql).toMatch(/revoke all on codigo_intentos from anon, authenticated/);
+    expect(sql).toMatch(/interval '10 minutes'\) >= 10/);
+    expect(sql).toMatch(/create unique index if not exists obras_codigo_key on obras\(codigo\)/);
+    // Alfabeto sin caracteres ambiguos y 8 posiciones → ~8,5e11 combinaciones
+    expect(sql).toMatch(/'ABCDEFGHJKMNPQRSTUVWXYZ23456789'/);
+    expect(sql).toMatch(/for i in 1\.\.8 loop/);
   });
 
   test('los miembros solo pueden cambiar el estado (trigger)', () => {
