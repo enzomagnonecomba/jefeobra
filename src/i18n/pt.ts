@@ -25,6 +25,8 @@ export const pt: Record<string, string> = {
   'Opcional': 'Opcional',
   'Volver': 'Voltar',
   'Idioma': 'Idioma',
+  'Mi cuenta': 'Minha conta',
+  'Tema': 'Tema',
   'Cambiar a modo claro': 'Mudar para o modo claro',
   'Cambiar a modo oscuro': 'Mudar para o modo escuro',
   'Modo demo · datos locales': 'Modo demo · dados locais',

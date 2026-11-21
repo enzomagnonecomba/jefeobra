@@ -11,6 +11,9 @@ import { LangSwitcher } from '../components/LangSwitcher';
 import { Pricing } from '../components/Pricing';
 import { TRIAL_DAYS } from '../lib/planes';
 import { t } from '../i18n';
+import { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import { Menu, X } from 'lucide-react';
 
 const fadeUp: Variants = { hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } } };
 const stagger: Variants = { show: { transition: { staggerChildren: 0.08 } } };
@@ -32,7 +35,7 @@ function Mock() {
   ];
   return (
     <motion.div initial={{ opacity: 0, y: 40, rotateX: 8 }} animate={{ opacity: 1, y: 0, rotateX: 0 }} transition={{ duration: 0.9, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-      className="relative mx-auto mt-16 max-w-5xl rounded-3xl border border-line bg-white/80 p-3 shadow-lift backdrop-blur [perspective:1000px]">
+      className="relative mx-auto mt-12 max-w-5xl rounded-3xl border border-line bg-white/80 p-2 shadow-lift backdrop-blur [perspective:1000px] sm:mt-16 sm:p-3">
       <div className="rounded-2xl bg-bone p-4 sm:p-6">
         <div className="mb-4 flex items-center gap-2">
           <span className="h-3 w-3 rounded-full bg-rose-bg" /><span className="h-3 w-3 rounded-full bg-peach-bg" /><span className="h-3 w-3 rounded-full bg-sage-bg" />
@@ -68,8 +71,10 @@ function Mock() {
 
 export default function Landing() {
   const { user } = useAuth();
+  const [menu, setMenu] = useState(false);
+  const close = () => setMenu(false);
   return (
-    <div className="overflow-x-hidden">
+    <div className="overflow-x-clip">
       {/* NAVBAR */}
       <header className="sticky top-0 z-40 border-b border-line/60 bg-bone/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
@@ -79,23 +84,57 @@ export default function Landing() {
             <a href="#quienes-somos" className="hover:text-ink">{t("Quiénes somos")}</a>
             <a href="#planes" className="hover:text-ink">{t("Planes")}</a>
           </nav>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <LangSwitcher />
-            <ThemeToggle />
-            {user ? (
-              <Link to="/app" className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white shadow-soft hover:bg-slate-700">{t("Ir al panel")} <ArrowRight size={16} /></Link>
-            ) : (
-              <>
-                <Link to="/login" className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">{t("Login")}</Link>
-                <Link to="/registro" className="rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-slate-700">{t("Register")}</Link>
-              </>
-            )}
+            <div className="hidden sm:block"><ThemeToggle /></div>
+            <div className="hidden items-center gap-2 md:flex">
+              {user ? (
+                <Link to="/app" className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white shadow-soft hover:bg-slate-700">{t("Ir al panel")} <ArrowRight size={16} /></Link>
+              ) : (
+                <>
+                  <Link to="/login" className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">{t("Login")}</Link>
+                  <Link to="/registro" className="rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-slate-700">{t("Register")}</Link>
+                </>
+              )}
+            </div>
+            <button onClick={() => setMenu(!menu)} aria-label={menu ? t('Cerrar menú') : t('Abrir menú')} aria-expanded={menu}
+              className="grid h-9 w-9 place-items-center rounded-xl text-slate-600 hover:bg-slate-100 md:hidden">
+              {menu ? <X size={20} /> : <Menu size={20} />}
+            </button>
           </div>
         </div>
+
+        {/* Menú móvil */}
+        <AnimatePresence>
+          {menu && (
+            <motion.nav initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }} className="overflow-hidden border-t border-line/60 md:hidden">
+              <div className="space-y-1 px-4 pb-5 pt-3">
+                {[['#que-hacemos', 'Qué hacemos'], ['#quienes-somos', 'Quiénes somos'], ['#planes', 'Planes']].map(([href, label]) => (
+                  <a key={href} href={href} onClick={close} className="block rounded-xl px-3 py-3 text-base font-semibold hover:bg-slate-100">{t(label)}</a>
+                ))}
+                <div className="flex items-center justify-between rounded-xl px-3 py-1.5">
+                  <span className="text-sm text-muted">{t('Tema')}</span>
+                  <ThemeToggle />
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  {user ? (
+                    <Link to="/app" onClick={close} className="col-span-2 inline-flex items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white">{t("Ir al panel")} <ArrowRight size={16} /></Link>
+                  ) : (
+                    <>
+                      <Link to="/login" onClick={close} className="rounded-xl border border-line bg-white px-4 py-3 text-center text-sm font-semibold">{t("Login")}</Link>
+                      <Link to="/registro" onClick={close} className="rounded-xl bg-ink px-4 py-3 text-center text-sm font-semibold text-white">{t("Register")}</Link>
+                    </>
+                  )}
+                </div>
+              </div>
+            </motion.nav>
+          )}
+        </AnimatePresence>
       </header>
 
       {/* HERO */}
-      <section className="relative px-4 pb-24 pt-16 sm:px-6 sm:pt-24">
+      <section className="relative px-4 pb-16 pt-12 sm:px-6 sm:pb-24 sm:pt-24">
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
           <div className="absolute left-[10%] top-10 h-72 w-72 rounded-full bg-lilac-bg blur-3xl" />
           <div className="absolute right-[8%] top-40 h-72 w-72 rounded-full bg-sky-bg blur-3xl" />
@@ -106,24 +145,24 @@ export default function Landing() {
           <motion.span variants={fadeUp} className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-soft">
             <Sparkles size={14} className="text-lilac" /> {t("Hecho para jefes de obra y estudios de arquitectura")}
           </motion.span>
-          <motion.h1 variants={fadeUp} className="mt-6 text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl">
+          <motion.h1 variants={fadeUp} className="mt-6 text-[2.15rem] font-extrabold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl">
             {t("Orden, trazabilidad y")} <span className="bg-gradient-to-r from-lilac via-sky to-sage bg-clip-text text-transparent">{t("calma")}</span> {t("para el caos diario de la obra.")}
           </motion.h1>
-          <motion.p variants={fadeUp} className="mx-auto mt-6 max-w-xl text-lg text-slate-600">
+          <motion.p variants={fadeUp} className="mx-auto mt-6 max-w-xl text-base text-slate-600 sm:text-lg">
             {t("Tareas, pedidos, caja chica, jornales, fletes y seguros en un solo lugar. Dejá el cuaderno, los audios y las planillas sueltas.")}
           </motion.p>
-          <motion.div variants={fadeUp} className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link to={user ? '/app' : '/registro'} className="group inline-flex items-center gap-2 rounded-2xl bg-ink px-6 py-3.5 font-semibold text-white shadow-lift transition hover:-translate-y-0.5">
+          <motion.div variants={fadeUp} className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link to={user ? '/app' : '/registro'} className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-ink px-6 py-3.5 font-semibold text-white shadow-lift transition hover:-translate-y-0.5">
               {t("Probar {n} días gratis", { n: TRIAL_DAYS })} <ArrowRight size={18} className="transition group-hover:translate-x-1" />
             </Link>
-            <a href="#que-hacemos" className="inline-flex items-center gap-2 rounded-2xl border border-line bg-white px-6 py-3.5 font-semibold shadow-soft hover:border-slate-300">{t("Ver cómo funciona")}</a>
+            <a href="#que-hacemos" className="inline-flex items-center justify-center gap-2 rounded-2xl border border-line bg-white px-6 py-3.5 font-semibold shadow-soft hover:border-slate-300">{t("Ver cómo funciona")}</a>
           </motion.div>
         </motion.div>
         <Mock />
       </section>
 
       {/* QUÉ HACEMOS */}
-      <section id="que-hacemos" className="scroll-mt-20 px-4 py-24 sm:px-6">
+      <section id="que-hacemos" className="scroll-mt-20 px-4 py-16 sm:px-6 sm:py-24">
         <div className="mx-auto max-w-6xl">
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }} variants={stagger} className="mb-14 max-w-2xl">
             <motion.p variants={fadeUp} className="text-sm font-bold uppercase tracking-[0.15em] text-lilac">{t("Qué hacemos")}</motion.p>
@@ -144,7 +183,7 @@ export default function Landing() {
       </section>
 
       {/* QUIÉNES SOMOS */}
-      <section id="quienes-somos" className="scroll-mt-20 bg-white px-4 py-24 sm:px-6">
+      <section id="quienes-somos" className="scroll-mt-20 bg-white px-4 py-16 sm:px-6 sm:py-24">
         <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-2">
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={stagger}>
             <motion.p variants={fadeUp} className="text-sm font-bold uppercase tracking-[0.15em] text-sage">{t("Quiénes somos")}</motion.p>
@@ -165,7 +204,7 @@ export default function Landing() {
               { icon: Users, tone: 'sky' as Tone, n: 'Equipo', t: 'Producto y soporte cercano, en tu idioma.' },
               { icon: ShieldCheck, tone: 'sage' as Tone, n: 'Técnica', t: 'Stack moderno, seguro y en la nube.' },
             ].map((c, i) => (
-              <motion.div key={c.n} variants={fadeUp} className={`rounded-3xl border border-line bg-bone p-6 ${i % 2 ? 'translate-y-8' : ''}`}>
+              <motion.div key={c.n} variants={fadeUp} className={`rounded-3xl border border-line bg-bone p-5 sm:p-6 ${i % 2 ? 'sm:translate-y-8' : ''}`}>
                 <div className={`mb-4 grid h-11 w-11 place-items-center rounded-2xl ${TONE[c.tone]}`}><c.icon size={20} /></div>
                 <p className="font-bold">{t(c.n)}</p>
                 <p className="mt-1 text-sm text-slate-600">{t(c.t)}</p>
@@ -176,7 +215,7 @@ export default function Landing() {
       </section>
 
       {/* PLANES */}
-      <section id="planes" className="scroll-mt-20 px-4 py-24 sm:px-6">
+      <section id="planes" className="scroll-mt-20 px-4 py-16 sm:px-6 sm:py-24">
         <div className="mx-auto max-w-6xl">
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={stagger} className="mx-auto mb-10 max-w-2xl text-center">
             <motion.p variants={fadeUp} className="text-sm font-bold uppercase tracking-[0.15em] text-sky">{t("Planes")}</motion.p>
@@ -188,9 +227,9 @@ export default function Landing() {
       </section>
 
       {/* CTA */}
-      <section className="px-4 py-24 sm:px-6">
+      <section className="px-4 py-16 sm:px-6 sm:py-24">
         <motion.div initial={{ opacity: 0, scale: 0.97 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
-          className="mx-auto max-w-4xl rounded-[2rem] bg-ink px-8 py-14 text-center text-white shadow-lift">
+          className="mx-auto max-w-4xl rounded-[2rem] bg-ink px-6 py-12 text-center text-white shadow-lift sm:px-8 sm:py-14">
           <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">{t("Tu próxima obra, bajo control desde el día uno.")}</h2>
           <p className="mx-auto mt-4 max-w-lg text-slate-300">{t("Creá tu cuenta en un minuto. Tu espacio es privado y aislado.")}</p>
           <Link to={user ? '/app' : '/registro'} className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-sage-bg px-6 py-3.5 font-semibold text-sage transition hover:-translate-y-0.5">

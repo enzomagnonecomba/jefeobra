@@ -25,6 +25,8 @@ export const en: Record<string, string> = {
   'Opcional': 'Optional',
   'Volver': 'Back',
   'Idioma': 'Language',
+  'Mi cuenta': 'My account',
+  'Tema': 'Theme',
   'Cambiar a modo claro': 'Switch to light mode',
   'Cambiar a modo oscuro': 'Switch to dark mode',
   'Modo demo · datos locales': 'Demo mode · local data',

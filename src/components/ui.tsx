@@ -86,7 +86,7 @@ export function PageHeader({ title, subtitle, icon: Icon, tone = 'lilac', action
   title: string; subtitle?: string; icon?: LucideIcon; tone?: Tone; actions?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-3 sm:mb-6 sm:gap-4">
       <div className="flex items-center gap-3">
         {Icon && (
           <div className={`grid h-11 w-11 place-items-center rounded-2xl ${TONE[tone]}`}>
@@ -94,7 +94,7 @@ export function PageHeader({ title, subtitle, icon: Icon, tone = 'lilac', action
           </div>
         )}
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">{title}</h1>
           {subtitle && <p className="text-sm text-muted">{subtitle}</p>}
         </div>
       </div>
@@ -112,7 +112,7 @@ export function StatCard({ label, value, icon: Icon, tone = 'sky', hint }: {
         <p className="text-sm font-medium text-muted">{label}</p>
         <div className={`grid h-9 w-9 place-items-center rounded-xl ${TONE[tone]}`}><Icon size={17} /></div>
       </div>
-      <p className="mt-2 text-2xl font-bold tracking-tight">{value}</p>
+      <p className="mt-2 truncate text-2xl font-bold tracking-tight">{value}</p>
       {hint && <div className="mt-1 text-xs text-muted">{hint}</div>}
     </Card>
   );
@@ -142,7 +142,7 @@ export function Modal({ open, onClose, title, children, wide }: {
         >
           <motion.div
             role="dialog" aria-modal="true" aria-label={title}
-            className={`max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-white p-6 shadow-lift sm:rounded-3xl ${wide ? 'sm:max-w-2xl' : 'sm:max-w-lg'}`}
+            className={`max-h-[92dvh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-lift sm:rounded-3xl sm:p-6 ${wide ? 'sm:max-w-2xl' : 'sm:max-w-lg'}`}
             initial={{ y: 40, opacity: 0, scale: 0.98 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 30, opacity: 0, scale: 0.98 }}
@@ -173,12 +173,12 @@ export function Segmented<T extends string>({ value, options, onChange }: {
   value: T; options: { value: T; label: string }[]; onChange: (v: T) => void;
 }) {
   return (
-    <div className="inline-flex flex-wrap rounded-xl border border-line bg-white p-1 shadow-soft">
+    <div className="inline-flex rounded-xl border border-line bg-white p-1 shadow-soft">
       {options.map((o) => (
         <button
           key={o.value}
           onClick={() => onChange(o.value)}
-          className={`relative rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${value === o.value ? 'text-ink' : 'text-muted hover:text-ink'}`}
+          className={`relative shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${value === o.value ? 'text-ink' : 'text-muted hover:text-ink'}`}
         >
           {value === o.value && (
             <motion.span layoutId={`seg-${options.map((x) => x.value).join()}`} className="absolute inset-0 rounded-lg bg-slate-100" transition={{ type: 'spring', damping: 30, stiffness: 400 }} />

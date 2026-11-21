@@ -99,16 +99,16 @@ export default function Seguimiento() {
         actions={<Button icon={Plus} onClick={() => openForm('new')}>{t("Nueva tarea")}</Button>} />
 
       <div className="mb-5 flex flex-wrap items-center gap-3">
-        <div className="relative min-w-[220px] flex-1 sm:max-w-xs">
+        <div className="relative w-full sm:w-auto sm:min-w-[220px] sm:max-w-xs sm:flex-1">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input className="field pl-9" placeholder={t("Buscar tareas…")} value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         {allTags.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5">
-            <Tag size={14} className="text-muted" />
+          <div className="thin-scroll -mx-4 flex items-center gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
+            <Tag size={14} className="shrink-0 text-muted" />
             {allTags.map((tk) => (
               <button key={tk} onClick={() => setTag(tag === tk ? null : tk)}
-                className={`rounded-full px-3 py-1 text-xs font-semibold transition ${tag === tk ? 'bg-lilac text-white' : 'bg-lilac-bg text-lilac hover:brightness-95'}`}>
+                className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold transition ${tag === tk ? 'bg-lilac text-white' : 'bg-lilac-bg text-lilac hover:brightness-95'}`}>
                 {tk}
               </button>
             ))}
@@ -116,8 +116,8 @@ export default function Seguimiento() {
         )}
       </div>
 
-      <div className="thin-scroll -mx-4 overflow-x-auto px-4 pb-4 sm:mx-0 sm:px-0">
-        <div className="grid min-w-[1000px] grid-cols-4 gap-4">
+      <div className="thin-scroll -mx-4 snap-x snap-mandatory overflow-x-auto scroll-px-4 px-4 pb-4 sm:mx-0 sm:px-0 xl:snap-none xl:overflow-visible">
+        <div className="flex gap-3 sm:gap-4 xl:grid xl:grid-cols-4">
           {TAREA_ESTADOS.map((col, ci) => {
             const items = byCol(col);
             const meta = COLS[col];
@@ -126,7 +126,7 @@ export default function Seguimiento() {
                 onDragOver={(e) => { e.preventDefault(); setOverCol(col); }}
                 onDragLeave={() => setOverCol((c) => (c === col ? null : c))}
                 onDrop={(e) => onDrop(e, col)}
-                className={`flex flex-col rounded-2xl border p-3 transition-colors ${overCol === col ? 'border-slate-300 bg-white' : 'border-transparent bg-slate-100/60'}`}>
+                className={`flex w-[82vw] shrink-0 snap-start flex-col rounded-2xl border p-3 transition-colors sm:w-[300px] xl:w-auto ${overCol === col ? 'border-slate-300 bg-white' : 'border-transparent bg-slate-100/60'}`}>
                 <div className="mb-3 flex items-center justify-between px-1">
                   <div className="flex items-center gap-2">
                     <span className={`h-2 w-2 rounded-full ${meta.dot}`} />

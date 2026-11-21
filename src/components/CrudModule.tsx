@@ -136,6 +136,17 @@ export default function CrudModule<T extends Row>({ config }: { config: CrudConf
     setEditing(null);
   }
 
+  const cell = (c: ColumnDef<T>, r: AnyRow) => (c.render
+    ? c.render(r as unknown as T)
+    : c.key === statusKey && statusField
+      ? <StatusPill field={statusField} value={String(r[c.key])} onChange={(v) => patch(r.id, { [c.key]: v } as Partial<T>)} />
+      : autoCell(fieldByKey[c.key], r[c.key]));
+
+  // En móvil: la primera columna que no sea fecha/estado es el título de la tarjeta.
+  const titleCol = columns.find((c) => c.key !== statusKey && fieldByKey[c.key]?.type !== 'date' && fieldByKey[c.key]?.type !== 'money') ?? columns[0];
+  const statusCol = columns.find((c) => c.key === statusKey);
+  const restCols = columns.filter((c) => c !== titleCol && c !== statusCol);
+
   return (
     <div>
       <PageHeader title={t(title)} subtitle={t(subtitle)} icon={icon} tone={tone}
@@ -144,15 +155,15 @@ export default function CrudModule<T extends Row>({ config }: { config: CrudConf
       {summary && !loading && <div className="mb-6">{summary(rawRows)}</div>}
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="relative min-w-[220px] flex-1 sm:max-w-xs">
+        <div className="relative w-full sm:w-auto sm:min-w-[220px] sm:max-w-xs sm:flex-1">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input className="field pl-9" placeholder={t("Buscar…")} value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         {statusField && (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="thin-scroll -mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
             {[{ value: 'todos', label: 'Todos', tone: 'slate' as Tone }, ...(statusField.options ?? [])].map((o) => (
               <button key={o.value} onClick={() => setStatus(o.value)}
-                className={`rounded-full px-3 py-1 text-xs font-semibold transition ${status === o.value ? `${TONE[o.tone ?? 'slate']} ring-2 ring-slate-200` : 'bg-white text-muted border border-line hover:text-ink'}`}>
+                className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold transition ${status === o.value ? `${TONE[o.tone ?? 'slate']} ring-2 ring-slate-200` : 'bg-white text-muted border border-line hover:text-ink'}`}>
                 {t(o.label)}
                 <span className="ml-1 opacity-60">
                   {o.value === 'todos' ? rows.length : rows.filter((r) => r[statusKey!] === o.value).length}
@@ -169,7 +180,35 @@ export default function CrudModule<T extends Row>({ config }: { config: CrudConf
         <EmptyState icon={icon} title={t('Todavía no hay registros en {x}', { x: t(title) })} text={t("Cargá el primero para empezar a llevar el control.")}
           action={<Button icon={Plus} onClick={() => openForm('new')}>{t('Agregar {x}', { x: t(singular).toLowerCase() })}</Button>} />
       ) : (
-        <Card className="overflow-hidden">
+        <>
+        <div className="space-y-3 md:hidden">
+          <AnimatePresence initial={false}>
+            {filtered.map((r) => {
+              const accent = rowAccent?.(r as unknown as T);
+              return (
+                <motion.div key={r.id} layout
+                  initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 20 }}
+                  onClick={() => openForm(r)}
+                  className={`cursor-pointer rounded-2xl border border-line bg-white p-4 shadow-soft active:scale-[0.99] ${accent ? ROW_ACCENT[accent] : ''}`}>
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div className="min-w-0 font-semibold leading-snug [&_*]:whitespace-normal">{cell(titleCol, r)}</div>
+                    {statusCol && <div className="shrink-0" onClick={(e) => e.stopPropagation()}>{cell(statusCol, r)}</div>}
+                  </div>
+                  <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
+                    {restCols.map((c) => (
+                      <div key={c.key} className={c.align === 'right' ? 'text-right' : ''}>
+                        <dt className="text-[11px] font-semibold uppercase tracking-wide text-muted">{t(c.label)}</dt>
+                        <dd className="mt-0.5 break-words [&_*]:whitespace-normal">{cell(c, r)}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+          {filtered.length === 0 && <p className="py-10 text-center text-sm text-muted">{t("Sin resultados para el filtro actual.")}</p>}
+        </div>
+        <Card className="hidden overflow-hidden md:block">
           <div className="thin-scroll overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
@@ -189,11 +228,7 @@ export default function CrudModule<T extends Row>({ config }: { config: CrudConf
                         className={`group cursor-pointer border-b border-line/70 last:border-0 hover:bg-slate-50/70 ${accent ? ROW_ACCENT[accent] : ''}`}>
                         {columns.map((c) => (
                           <td key={c.key} className={`whitespace-nowrap px-4 py-3 ${c.align === 'right' ? 'text-right' : ''}`}>
-                            {c.render
-                              ? c.render(r as unknown as T)
-                              : c.key === statusKey && statusField
-                                ? <StatusPill field={statusField} value={String(r[c.key])} onChange={(v) => patch(r.id, { [c.key]: v } as Partial<T>)} />
-                                : autoCell(fieldByKey[c.key], r[c.key])}
+                            {cell(c, r)}
                           </td>
                         ))}
                         <td className="px-2 py-3 text-right">
@@ -212,6 +247,7 @@ export default function CrudModule<T extends Row>({ config }: { config: CrudConf
             </table>
           </div>
         </Card>
+        </>
       )}
 
       <Modal open={editing !== null} onClose={() => setEditing(null)} title={editing === 'new' ? t('Agregar {x}', { x: t(singular).toLowerCase() }) : t('Editar {x}', { x: t(singular).toLowerCase() })}>

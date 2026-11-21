@@ -116,8 +116,8 @@ export default function Resumen() {
                   {m.tipo === 'ingreso' ? <ArrowDownLeft size={15} /> : <ArrowUpRight size={15} />}
                 </span>
                 <span className="flex-1 truncate">{m.concepto}</span>
-                <span className="text-xs text-muted">{fmtDate(m.fecha)}</span>
-                <span className={`w-28 text-right font-semibold tabular-nums ${m.tipo === 'ingreso' ? 'text-sage' : 'text-rose'}`}>{m.tipo === 'ingreso' ? '+' : '−'}{fmtMoney(m.monto)}</span>
+                <span className="hidden text-xs text-muted sm:inline">{fmtDate(m.fecha)}</span>
+                <span className={`shrink-0 text-right font-semibold tabular-nums sm:w-28 ${m.tipo === 'ingreso' ? 'text-sage' : 'text-rose'}`}>{m.tipo === 'ingreso' ? '+' : '−'}{fmtMoney(m.monto)}</span>
               </li>
             ))}
             {data.caja.length === 0 && <li className="py-4 text-sm text-muted">{t("Sin movimientos.")}</li>}

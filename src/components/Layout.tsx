@@ -3,7 +3,7 @@ import { NavLink, useLocation, useOutlet, Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   KanbanSquare, PackagePlus, ClipboardList, Calculator, Wallet, HardHat, FilePlus2, FolderInput, NotebookPen,
-  LayoutDashboard, Truck, Container, ShieldCheck, Shirt, Wrench, Building2, LogOut, PanelLeftClose, PanelLeftOpen,
+  LayoutDashboard, Truck, Container, ShieldCheck, Shirt, Wrench, Building2, PanelLeftClose, PanelLeftOpen,
   Menu, X, Gem, type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -17,6 +17,7 @@ import { LangSwitcher } from './LangSwitcher';
 import { diasDePrueba } from '../lib/planes';
 import { t } from '../i18n';
 import { Select } from './Select';
+import { UserMenu } from './UserMenu';
 
 interface NavItem { to: string; label: string; icon: LucideIcon }
 export const NAV: { title: string; items: NavItem[] }[] = [
@@ -81,7 +82,7 @@ function ObraSelector() {
   return (
     <Select value={obraActiva?.id ?? ''} onChange={seleccionar} ariaLabel={t('Obra activa')} menuMinWidth={240}
       icon={<Building2 size={16} className="shrink-0 text-sage" />}
-      className="!w-auto max-w-[180px] !py-2 font-semibold shadow-soft sm:max-w-xs"
+      className="min-w-0 flex-1 !py-2 font-semibold shadow-soft sm:!w-auto sm:max-w-xs sm:flex-none"
       options={obras.map((o) => ({ value: o.id, label: o.nombre, hint: o.direccion ?? undefined }))} />
   );
 }
@@ -114,7 +115,7 @@ function PrimeraObra() {
 }
 
 export default function Layout() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { obras, loading } = useObra();
   const location = useLocation();
   const outlet = useOutlet();
@@ -126,7 +127,6 @@ export default function Layout() {
 
   const needsObra = !loading && obras.length === 0 && location.pathname !== '/app/obras';
   const trial = diasDePrueba(user?.created_at);
-  const initial = (user?.user_metadata?.nombre as string | undefined)?.[0] ?? user?.email?.[0] ?? '?';
 
   return (
     <div className="flex min-h-screen">
@@ -172,23 +172,20 @@ export default function Layout() {
       </AnimatePresence>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-line bg-bone/85 px-4 backdrop-blur-md sm:px-6">
-          <button aria-label={t("Abrir menú")} onClick={() => setMobileOpen(true)} className="rounded-lg p-1.5 hover:bg-slate-100 lg:hidden"><Menu size={20} /></button>
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-line bg-bone/85 px-3 backdrop-blur-md sm:gap-3 sm:px-6">
+          <button aria-label={t("Abrir menú")} onClick={() => setMobileOpen(true)} className="shrink-0 rounded-lg p-1.5 hover:bg-slate-100 lg:hidden"><Menu size={20} /></button>
           {obras.length > 0 && <ObraSelector />}
-          <div className="flex-1" />
-          {!hasSupabase && <span className="hidden rounded-full bg-peach-bg px-3 py-1 text-xs font-semibold text-peach sm:inline">{t("Modo demo · datos locales")}</span>}
-          <Link to="/app/planes" className="hidden items-center gap-1.5 rounded-full bg-lilac-bg px-3 py-1 text-xs font-semibold text-lilac transition hover:brightness-95 md:inline-flex">
+          <div className="hidden flex-1 sm:block" />
+          {!hasSupabase && <span className="hidden whitespace-nowrap rounded-full bg-peach-bg px-3 py-1 text-xs font-semibold text-peach xl:inline">{t("Modo demo · datos locales")}</span>}
+          <Link to="/app/planes" className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-lilac-bg px-3 py-1 text-xs font-semibold text-lilac transition hover:brightness-95 lg:inline-flex">
             <Gem size={13} /> {trial > 0 ? t(trial === 1 ? 'Prueba gratis · {n} día' : 'Prueba gratis · {n} días', { n: trial }) : t('Prueba finalizada')}
           </Link>
           <LangSwitcher />
-          <ThemeToggle />
-          <div className="flex items-center gap-2">
-            <div className="grid h-9 w-9 place-items-center rounded-full bg-lilac-bg text-sm font-bold uppercase text-lilac" title={user?.email ?? ''}>{initial}</div>
-            <button onClick={signOut} title={t("Cerrar sesión")} aria-label={t("Cerrar sesión")} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-ink"><LogOut size={18} /></button>
-          </div>
+          <div className="hidden sm:block"><ThemeToggle /></div>
+          <UserMenu />
         </header>
 
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <main className="mx-auto w-full min-w-0 max-w-7xl flex-1 px-4 pb-10 pt-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
           {needsObra ? <PrimeraObra /> : (
             <AnimatePresence mode="wait">
               <motion.div key={location.pathname} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22, ease: 'easeOut' }}>
