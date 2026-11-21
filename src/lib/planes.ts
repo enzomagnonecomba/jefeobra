@@ -30,7 +30,7 @@ export const PLANES: Plan[] = [
   {
     id: 'estudio', nombre: 'Estudio', tone: 'sage', mensual: 59,
     descripcion: 'Para estudios con varios jefes de obra.',
-    features: ['Obras ilimitadas', 'Todo lo del plan Profesional', 'EPP y herramientas', 'Reportes para dirección de obra', 'Soporte prioritario'],
+    features: ['Obras ilimitadas', 'Todo lo del plan Profesional', 'Panel de gestión para administrativos del estudio', 'EPP y herramientas', 'Reportes para dirección de obra', 'Soporte prioritario'],
   },
 ];
 

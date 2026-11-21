@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   KanbanSquare, PackagePlus, ClipboardList, Calculator, Wallet, HardHat, FilePlus2, FolderInput, NotebookPen,
   LayoutDashboard, Truck, Container, ShieldCheck, Shirt, Wrench, Building2, PanelLeftClose, PanelLeftOpen,
-  Menu, X, Gem, type LucideIcon,
+  Menu, X, Gem, Building, Users, type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useObra } from '../context/ObraContext';
@@ -39,6 +39,10 @@ export const NAV: { title: string; items: NavItem[] }[] = [
     { to: '/app/servicios/fletes', label: 'Fletes', icon: Truck },
     { to: '/app/servicios/volquetes', label: 'Volquetes', icon: Container },
     { to: '/app/servicios/seguros', label: 'Seguros', icon: ShieldCheck },
+  ] },
+  { title: 'Estudio', items: [
+    { to: '/app/estudio', label: 'Panel de gestión', icon: Building },
+    { to: '/app/equipo', label: 'Equipo', icon: Users },
   ] },
   { title: 'Recursos', items: [
     { to: '/app/recursos/epp', label: 'EPP / Ropa', icon: Shirt },
@@ -125,7 +129,7 @@ export default function Layout() {
   useEffect(() => { try { localStorage.setItem('obrabase:sidebar', collapsed ? '1' : '0'); } catch { /* noop */ } }, [collapsed]);
   useEffect(() => setMobileOpen(false), [location.pathname]);
 
-  const needsObra = !loading && obras.length === 0 && location.pathname !== '/app/obras';
+  const needsObra = !loading && obras.length === 0 && !['/app/obras', '/app/equipo', '/app/planes'].includes(location.pathname) && !location.pathname.startsWith('/app/estudio');
   const trial = diasDePrueba(user?.created_at);
 
   return (

@@ -13,6 +13,10 @@ const Minutas = lazy(() => import('./pages/app/Minutas'));
 const Resumen = lazy(() => import('./pages/app/Resumen'));
 const Obras = lazy(() => import('./pages/app/Obras'));
 const Planes = lazy(() => import('./pages/app/Planes'));
+const Equipo = lazy(() => import('./pages/app/Equipo'));
+const PanelEstudio = lazy(() => import('./pages/app/PanelEstudio'));
+const ObraEstudio = lazy(() => import('./pages/app/PanelEstudio').then((m) => ({ default: m.ObraEstudio })));
+const Invitacion = lazy(() => import('./pages/Invitacion'));
 const NuevoPedido = lazy(() => import('./pages/app/Pedidos').then((m) => ({ default: m.NuevoPedido })));
 const MisPedidos = lazy(() => import('./pages/app/Pedidos').then((m) => ({ default: m.MisPedidos })));
 const Calculos = lazy(() => import('./pages/app/Pedidos').then((m) => ({ default: m.Calculos })));
@@ -28,11 +32,15 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/registro" element={<Login />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/invitacion/:token" element={<Invitacion />} />
 
         <Route path="/app" element={<RequireAuth><Layout /></RequireAuth>}>
           <Route index element={<Navigate to="obra/resumen" replace />} />
           <Route path="obras" element={<Obras />} />
           <Route path="planes" element={<Planes />} />
+          <Route path="equipo" element={<Equipo />} />
+          <Route path="estudio" element={<PanelEstudio />} />
+          <Route path="estudio/obras/:id" element={<ObraEstudio />} />
           <Route path="seguimiento" element={<Seguimiento />} />
 
           <Route path="pedidos/nuevo" element={<NuevoPedido />} />

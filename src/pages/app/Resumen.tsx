@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { LayoutDashboard, Wallet, Package, KanbanSquare, ShieldAlert, ArrowDownLeft, ArrowUpRight, FilePlus2, ChevronRight } from 'lucide-react';
@@ -6,7 +6,7 @@ import * as db from '../../lib/db';
 import { useObra } from '../../context/ObraContext';
 import { Badge, Card, PageHeader, StatCard, daysUntil, fmtDate, fmtMoney } from '../../components/ui';
 import { ESTADO_PEDIDO } from './Pedidos';
-import type { CajaMovimiento, Pedido, Tarea } from '../../types';
+import type { CajaMovimiento, Obra, Pedido, Tarea } from '../../types';
 import { t } from '../../i18n';
 
 interface Data {
@@ -24,10 +24,19 @@ const COLS = [
 
 export default function Resumen() {
   const { obraActiva } = useObra();
+  if (!obraActiva) return null;
+  return <ResumenObra obra={obraActiva} />;
+}
+
+/**
+ * Resumen ejecutivo de una obra. Lo usa el jefe (su obra activa) y el panel del
+ * estudio en modo solo lectura (readOnly oculta los accesos a los módulos).
+ */
+export function ResumenObra({ obra, readOnly = false, header }: { obra: Obra; readOnly?: boolean; header?: ReactNode }) {
+  const obraActiva = obra;
   const [data, setData] = useState<Data | null>(null);
 
   useEffect(() => {
-    if (!obraActiva) return;
     const f = { obra_id: obraActiva.id };
     Promise.all([
       db.list<Tarea>('tareas', f), db.list<Pedido>('pedidos', f), db.list<CajaMovimiento>('caja_movimientos', f, 'fecha'),
@@ -36,7 +45,6 @@ export default function Resumen() {
       .catch(console.error);
   }, [obraActiva]);
 
-  if (!obraActiva) return null;
   if (!data) return <Card className="p-10 text-center text-sm text-muted">{t("Cargando resumen…")}</Card>;
 
   const ing = data.caja.filter((m) => m.tipo === 'ingreso').reduce((a, m) => a + Number(m.monto), 0);
@@ -54,7 +62,7 @@ export default function Resumen() {
 
   return (
     <div>
-      <PageHeader title={t("Resumen de obra")} subtitle={`${obraActiva.nombre}${obraActiva.direccion ? ` · ${obraActiva.direccion}` : ''}`} icon={LayoutDashboard} tone="sage" />
+      {header ?? <PageHeader title={t("Resumen de obra")} subtitle={`${obraActiva.nombre}${obraActiva.direccion ? ` · ${obraActiva.direccion}` : ''}`} icon={LayoutDashboard} tone="sage" />}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label={t("Saldo caja chica")} value={fmtMoney(saldo)} icon={Wallet} tone={saldo < 0 ? 'peach' : 'rose'}
@@ -71,7 +79,7 @@ export default function Resumen() {
         <Card className="p-6 lg:col-span-2">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-bold">{t("Estado del tablero")}</h2>
-            <Link to="/app/seguimiento" className="inline-flex items-center text-sm font-semibold text-sky hover:underline">{t("Ver tablero")} <ChevronRight size={16} /></Link>
+            {!readOnly && <Link to="/app/seguimiento" className="inline-flex items-center text-sm font-semibold text-sky hover:underline">{t("Ver tablero")} <ChevronRight size={16} /></Link>}
           </div>
           <div className="mb-5 flex h-3 overflow-hidden rounded-full bg-slate-100">
             {COLS.map((c, i) => {
@@ -107,7 +115,7 @@ export default function Resumen() {
         <Card className="p-6 lg:col-span-2">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-bold">{t("Últimos movimientos de caja")}</h2>
-            <Link to="/app/obra/caja-chica" className="inline-flex items-center text-sm font-semibold text-rose hover:underline">{t("Caja chica")} <ChevronRight size={16} /></Link>
+            {!readOnly && <Link to="/app/obra/caja-chica" className="inline-flex items-center text-sm font-semibold text-rose hover:underline">{t("Caja chica")} <ChevronRight size={16} /></Link>}
           </div>
           <ul className="divide-y divide-line">
             {data.caja.slice(0, 5).map((m) => (
@@ -127,7 +135,7 @@ export default function Resumen() {
         <Card className="p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-bold">{t("Pedidos recientes")}</h2>
-            <Link to="/app/pedidos/mis-pedidos" className="text-sm font-semibold text-peach hover:underline">{t("Ver todos")}</Link>
+            {!readOnly && <Link to="/app/pedidos/mis-pedidos" className="text-sm font-semibold text-peach hover:underline">{t("Ver todos")}</Link>}
           </div>
           <ul className="space-y-2">
             {data.pedidos.slice(0, 5).map((p) => (

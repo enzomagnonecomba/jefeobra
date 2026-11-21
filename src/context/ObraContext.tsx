@@ -29,7 +29,8 @@ export function ObraProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     try {
       const data = await db.list<Obra>('obras', {}, 'created_at');
-      setObras(data.reverse());
+      // Solo obras propias: las compartidas por otros jefes se ven en el Panel del estudio.
+      setObras(data.filter((o) => !o.user_id || o.user_id === user.id).reverse());
     } catch (e) {
       console.error(e);
     } finally {

@@ -44,6 +44,26 @@ export async function list<T>(table: string, filters: Filters = {}, orderBy = 'c
   return data as T[];
 }
 
+/** Lista filas cuya `column` está en `values` (ej. pedidos de varias obras). */
+export async function listIn<T>(table: string, column: string, values: string[], orderBy = 'created_at', ascending = false): Promise<T[]> {
+  if (!values.length) return [];
+  if (!hasSupabase) {
+    const set = new Set(values);
+    return readLocal<Any>(table)
+      .filter((r) => set.has(String(r[column])))
+      .sort((a, b) => (ascending ? 1 : -1) * String(a[orderBy] ?? '').localeCompare(String(b[orderBy] ?? ''))) as unknown as T[];
+  }
+  const { data, error } = await supabase.from(table).select('*').in(column, values).order(orderBy, { ascending });
+  if (error) throw error;
+  return data as T[];
+}
+
+/** Acceso directo al almacenamiento local del modo demo (para emular RPCs). */
+export const demoStore = {
+  read: <T>(table: string) => readLocal<T>(table),
+  write: <T>(table: string, rows: T[]) => writeLocal(table, rows),
+};
+
 export async function insert<T>(table: string, values: Partial<T>): Promise<T> {
   if (!hasSupabase) {
     const now = new Date().toISOString();
